@@ -1,0 +1,71 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Retrieval augmented generation generative AI chatbot
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: genai-rag-chatbot-workshop
+    Description: Workshop to implemente a retrieval augmented generation generative AI chatbot
+    Author: ilyiny
+    SpdxLicenseId: MIT
+    LicenseUrl: ./LICENSE
+    ReadmeUrl: ./README.md
+    Labels: ['amazon', 'generative AI', 'gebAI', 'RAG', 'RAG chatbot', 'Bedrock']
+    HomePageUrl: https://gitlab.aws.dev/ilyiny/genai-rag-bot-workshop
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://gitlab.aws.dev/ilyiny/genai-rag-bot-workshop
+
+Globals:
+  Function:
+    Runtime: python3.10
+    MemorySize: 1024
+    Timeout: 120
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+    Tags:
+      Project: amazon-sagemaker-saml-backend
+
+Outputs:
+  RAGChatBotUrl:
+    Description: URL of the chatbot front-end
+    Value: !GetAtt App.Outputs.AppUrl
+  
+Parameters:
+  KendraIndexId:
+    Type: String
+    Description: Amazon Kendra index id
+
+  SageMakerLLMEndpointName:
+    Type: String
+    Description: LLM endpoint name
+
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Type: String
+    Default: 10.0.0.0/16
+    Description: CIDR block for a new VPC
+
+Resources:
+  
+######## CF Stacks ########
+  VPC:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: cfn-templates/vpc.yaml
+      Parameters:
+        VPCCIDR: !Ref VPCCIDR
+      
+  App:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: cfn-templates/app.yaml
+      Parameters:
+        VPCId: !GetAtt VPC.Outputs.VPCId
+        PublicSubnet1: !GetAtt VPC.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt VPC.Outputs.PublicSubnet2

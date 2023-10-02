@@ -3,7 +3,7 @@
     "kendra_edition": "DEVELOPER_EDITION",
     "data_sources": [
       {
-        "name": "press-releases-en",
+        "name": "admin-ch-public",
         "TemplateConfiguration": {
           "Template": {
             "connectionConfiguration": {

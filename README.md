@@ -144,17 +144,19 @@ Create Kendra index:
 
 Wait until the Kendra index is created and ready.
 
+**TODO**: add boto3/AWS CLI Kendra index creation 
+
 #### Amazon OpenSearch
 **TODO**: add OpenSearch setup instructions
 
-#### Ingestion
+#### Ingestion - Kendra
 You're going to ingest public press releases from Swiss Government web site https://www.admin.ch/ using a built-in [Kendra Web Crawler connector 2.0](https://docs.aws.amazon.com/kendra/latest/dg/data-source-v2-web-crawler.html).
 
 1. Navigate to the created index in the [Kendra console](https://us-east-1.console.aws.amazon.com/kendra/home?region=us-east-1#indexes) 
 2. Choose **Add data source**
 3. Choose **Web Crawler v2.0** connector and click **Add connector** You can choose any other connector to connect to a data source of your choice and ingest documents from that data source
 
-The following instruction assumes you use the Web Crawler to ingest the documents from the site https://www.admin.ch/. If you use another data source, configure the Kendra connector accordingly.
+The following instruction assumes you use the Web Crawler to ingest the documents from the site https://www.admin.ch/. If you use another data source or another web URL, configure the Kendra connector accordingly.
 
 In the **Add data source** pane:
 
@@ -180,14 +182,20 @@ These URLs contain 200 the most recent press releases in English.
 3. Provide the following settings on **Configure sync settings** page:
     - Sync domains with subdomains only
     - Crawl depth: 1
+    - Check **Include the files that has links to web pages**
     - Sync mode: Full sync
     - Frequency: Run on demand
-4. Provide the following settings on **Set field mappings
+4. Leave the default settings on **Set field mappings**
+5. Review and create
+
+Choose **Sync now**
+
+The crawling and document indexing takes about 15 minutes. You don't need to wait until the sync finished and can move to the next task.
 
 **TODO**: add boto3 or AWS CLI kendra index creation and ingestion
 
-### Retriever
-
+#### Ingestion - OpenSearch
+**TODO**: Add custom crawler and ingestion into OpenSearch code
 
 ### Generator
 You use an LLM as a generator to generate answers to the question using retrieved context.
@@ -206,6 +214,56 @@ In Cloud9 terminal:
 - `cd chatbot/`
 - `bash setup.sh`
 
+### Retriever and orchestration
+The retriever in the RAG design pattern is responsible for sending search request to the knowledge base/information retrieval engine and retrieving search results.
+
+You use [LangChain](https://python.langchain.com/en/latest/) framework to implement the retriever and also the orchestration layer
+
+The main components for the LangChain-based orchestrator are:
+
+`KendraIndexRetriever`
+The implementation of Kendra retriever is in `orchestration/kendra` folder.
+
+`ConversationalBufferWindowMemory`
+    short-term memory -> this workshop
+    long-term memory
+
+`DynamoDBChatMessageHistory`
+Since you use Lambda as a stateless serverless microservice for the orchestration layer, you use Amazon DynamoDB to persist conversation memory to a DynamoDB table. 
+
+`LLM endpoint`
+You use a SageMaker real-time endpoint created in the **Generator** section or Amazon Bedrock API.
+
+`PromptTemplate`
+LangChain provides prompt templates for specific use cases and LLMs.
+
+`ConversationalRetrievalChain`
+This chain has two steps. First, it condenses the current question and the chat history into a standalone prompt which is sent to the retriever. After the retrieving the search result sends the question and search results to a LLM. 
+With the declarative nature of LangChain you can easily use a separate language model for each step. For example, you can use a cheaper and faster model for question summarization task, and a larger, more advanced and expensive model for answering the question. In this workshop you use one model for both steps.
+
+To understand how the end-to-end orchestration works and how the components are linked together, look into the orchestration implementation in the Lambda function `orchestration/rag_app.py`.
+
+**TODO**: Add Amazon Bedrock integration to Lambda
+
+#### Orchestration layer deployment
+Navigate to the [Cloud9 environment](https://us-east-1.console.aws.amazon.com/cloud9control/home?region=us-east-1#/).
+
+You're going to use [AWS Serverless Application Model (AWS SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy end-to-end RAG chatbot application.
+
+The SAM application stack deploys the following resources:
+- Network infrastructure including VPC, two subnets, and Internet Gateway
+- IAM execution roles for AWS Lambda and ECS task
+- ECS cluster for hosting the front-end
+- Application Load Balancer for public access of the front-end
+- Amazon API Gateway API exposing the orchestration layer to the frond-end via REST API
+- AWS Lambda function with the orchestration layer implementation
+- Amazon DynamoDB table for conversation history persistence
+
+You need the following parameters to pass to the SAM application:
+- `KENDRA_INDEX_ID`
+- `SM_ENDPOINT_NAME`
+
+
 
 
 
@@ -218,14 +276,16 @@ If you use own AWS account or an isengard account, you must delete provisioning 
 **TODO**: Provide clean-up instructions 
 
 ## Resources
-The following is the collection of useful links to the releated resources.
+The following is the collection of useful links to the related resources.
 
 - [A Survey on In-context Learning](https://arxiv.org/abs/2301.00234) – a paper on in-context learning for LLMs
-- [Deploy self-service question answering with the QnABot on AWS solution powered by Amazon Lex with Amazon Kendra and large language models](go.aws/48oG6WK) – in-depth example of RAG chatbot with Amazon Kendra
-- [How to Build an Open-Domain Question Answering System?](bit.ly/3ZppYAl) – a good overview of information retrieval (IR) approaches
+- [Deploy self-service question answering with the QnABot on AWS solution powered by Amazon Lex with Amazon Kendra and large language models](https://go.aws/48oG6WK) – in-depth example of RAG chatbot with Amazon Kendra
+- [How to Build an Open-Domain Question Answering System?](https://bit.ly/3ZppYAl) – a good overview of information retrieval (IR) approaches
 - [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) – an original paper on RAG approach
 - [Retrieval augmented generation (RAG)](https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-foundation-models-customize-rag.html) – Amazon SageMaker Developer Guide
 - [Implementing Generative AI on AWS workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/80ae1ed2-f415-4d3d-9eb0-e9118c147bd4/en-US) – a public workshop
+- [Large Language Model - Query Disambiguation for Conversational Retrieval, and Generative Question Answering](https://github.com/aws-solutions/qnabot-on-aws/tree/main/docs/LLM_Retrieval_and_generative_question_answering)
+- [QnABot on AWS](https://aws.amazon.com/solutions/implementations/qnabot-on-aws/) - a public solution in AWS Solutions Library
 
 ## Contributors
 The baseline of source code and overall architecture were taken from the public AWS workshop [Implementing Generative AI on AWS](https://catalog.us-east-1.prod.workshops.aws/workshops/80ae1ed2-f415-4d3d-9eb0-e9118c147bd4/en-US).
