@@ -21,6 +21,9 @@ Parameters:
   APIId:
     Type: String
 
+  ECRImageURI:
+    Type: String
+    Description: Image URI of the chatbot front-end
 
 Resources:
 
@@ -59,12 +62,7 @@ Resources:
       TaskRoleArn: !GetAtt EcsTaskExecutionRole.Arn
       ContainerDefinitions:
       - Name: rag-app
-        Image: !Join
-                  - ''
-                  - - !Ref "AWS::AccountId"
-                    - ".dkr.ecr."
-                    - !Ref "AWS::Region"
-                    - ".amazonaws.com/rag-app:latest"
+        Image: !Ref ECRImageURI
         LogConfiguration:
           LogDriver: awslogs
           Options:

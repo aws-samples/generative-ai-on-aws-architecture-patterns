@@ -1,11 +1,11 @@
 # Generative AI retrieval-augmented generation (RAG) chatbot workshop
 
-This **internal** repository contains instructions and examples to create your first generative AI chatbot connected to a knowledge base.
+This **internal** repository contains instructions and examples to create your first generative AI chatbot connected to a knowledge base. 
 
 In this workshop you're going to learn:
 - a foundational generative AI design pattern: retrieval augmented generation (RAG)
 - how to use Amazon Kendra to implement a knowledge base with a document index
-- how to ingest documents into the knowledge base
+- how to ingest documents into the knowledge base using Kendra connectors
 - how to use Amazon SageMaker JumpStart to deploy an open source LLM as a real-time endpoint and use the endpoint for inference
 - how to use HuggingFace TGI container and Amazon SageMaker to deploy an LLM as a real-time endpoint
 - how to use Amazon Bedrock to connect to large language models (LLMs) and use them via an API
@@ -38,12 +38,83 @@ git clone git@ssh.gitlab.aws.dev:ilyiny/genai-rag-bot-workshop.git
 - Run `chmod +x resize-disk.sh`
 - Run `./resize-disk.sh 100`
 
+#### Upgrade to Python 3.10
+The Lambda function you're going to implement requires Python 3.10 runtime. This in turn requires the Python 3.10 version of AWS SAM CLI. 
+
+Follow the instructions below to upgrade Cloud9 Python version to 3.10 by fol
+---
+```sh
+sudo yum update -y
+sudo yum erase openssl-devel -y
+sudo yum install openssl11 openssl11-devel  libffi-devel bzip2-devel wget -y
+wget https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz
+tar -xf Python-3.10.2.tgz
+cd Python-3.10.2/
+./configure --prefix=/usr --enable-optimizations
+make -j $(nproc)
+sudo make altinstall
+python3.10 -V
+```
+
+```
+sudo yum install python3-pip
+```
+
+```
+sudo ln -sf /usr/bin/python3.10 /usr/bin/python3
+```
+
+```
+source ~/.bash_profile
+python --version
+```
+
+--- 
+```
+git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+cat << 'EOT' >> ~/.bashrc
+export PATH="$HOME/.pyenv/bin:$PATH"
+eval "$(pyenv init -)"
+EOT
+source ~/.bashrc
+```
+
+```
+sudo yum update -y
+sudo yum erase openssl-devel -y
+sudo yum install openssl11 openssl11-devel xz-devel libffi-devel bzip2-devel wget -y
+```
+
+```
+pyenv install 3.10
+pyenv global 3.10
+```
+
+```
+export PATH="$HOME/.pyenv/shims:$PATH"
+```
+
+```
+source ~/.bash_profile
+python --version
+```
+---
+
+Upgrade SAM to the latest version:
+```sh
+sudo yum update -y
+wget https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
+unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
+sudo ./sam-installation/install --update
+sam --version
+```
+
 ### Setup SageMaker Studio
 SageMaker domain
 User profile -> for each individual user
 
 #### SageMaker execution role permissions
-You need the following permissions for your user profile execution role:
+You need the following permissions for your Studio user profile execution role:
 - `servicequotas:GetServiceQuota`
 - `bedrock:*`
 
@@ -147,7 +218,7 @@ Wait until the Kendra index is created and ready.
 **TODO**: add boto3/AWS CLI Kendra index creation 
 
 #### Amazon OpenSearch
-**TODO**: add OpenSearch setup instructions
+🚧 Available in the next version of the workshop!
 
 #### Ingestion - Kendra
 You're going to ingest public press releases from Swiss Government web site https://www.admin.ch/ using a built-in [Kendra Web Crawler connector 2.0](https://docs.aws.amazon.com/kendra/latest/dg/data-source-v2-web-crawler.html).
@@ -195,7 +266,7 @@ The crawling and document indexing takes about 15 minutes. You don't need to wai
 **TODO**: add boto3 or AWS CLI kendra index creation and ingestion
 
 #### Ingestion - OpenSearch
-**TODO**: Add custom crawler and ingestion into OpenSearch code
+🚧 Available in the next version of the workshop!
 
 ### Generator
 You use an LLM as a generator to generate answers to the question using retrieved context.
@@ -250,7 +321,7 @@ Navigate to the [Cloud9 environment](https://us-east-1.console.aws.amazon.com/cl
 
 You're going to use [AWS Serverless Application Model (AWS SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy end-to-end RAG chatbot application.
 
-The SAM application stack deploys the following resources:
+The SAM CloudFormation template deploys the following resources:
 - Network infrastructure including VPC, two subnets, and Internet Gateway
 - IAM execution roles for AWS Lambda and ECS task
 - ECS cluster for hosting the front-end
@@ -259,13 +330,50 @@ The SAM application stack deploys the following resources:
 - AWS Lambda function with the orchestration layer implementation
 - Amazon DynamoDB table for conversation history persistence
 
-You need the following parameters to pass to the SAM application:
-- `KENDRA_INDEX_ID`
-- `SM_ENDPOINT_NAME`
+Look in `template.yaml` CloudFormation template and `orchestration/rag_app.py` Lambda function code to understand how the main components connected and how the serverless backend works.
 
+Now deploy the SAM application.
 
+Make sure you're in the workshop folder: 
+```sh
+cd ~/environment/genai-rag-bot-workshop/
+```
 
+Build AWS SAM application:
+```bash
+sam build
+```
 
+Deploy the application:
+```bash
+sam deploy --guided
+```
+
+You need to provide following parameters to pass to the SAM CloudFormation template:
+- `LLMContextLength`
+- `ECRImageURI`
+- `KendraIndexId`
+- `SageMakerLLMEndpointName`
+
+Provide configuration parameters and wait until the CloudFormation stack deployment succeeded. 
+
+Print the stack output (provide your stack name):
+```sh
+aws cloudformation describe-stacks \
+    --stack-name rag-app  \
+    --output table \
+    --query "Stacks[0].Outputs[*].[OutputKey, OutputValue]"
+```
+
+Copy the value of `RAGChatBotUrl` in a browser and start the chatbot.
+
+If everything works fine, you should see the chatbot user interface:
+
+![](./static/img/rag-bot-ux.png)
+
+## Experimentation
+Now ask some questions about Switzerland or on generally any topic, for example:
+`What is the usage of fossil fuels in Switzerland?`
 
 ## Conclusion
 Congratulations, you just build your first RAG-based generative AI application on AWS!
@@ -273,7 +381,14 @@ Congratulations, you just build your first RAG-based generative AI application o
 ## Clean up
 If you use own AWS account or an isengard account, you must delete provisioning resources to avoid unnecessary charges. 
 
-**TODO**: Provide clean-up instructions 
+Remove the application CloudFormation stack:
+- Execute in the Cloud9 terminal: `sam delete`. Wait until stacks are deleted
+
+Remove the SageMaker endpoint:
+- Navigate to SageMaker Studio
+- Execute the **Clean up** section of the `llm-generator.ipynb` notebook
+
+Delete the Cloud9 environment is you don't need it anymore
 
 ## Resources
 The following is the collection of useful links to the related resources.

@@ -9,7 +9,7 @@ Description: >
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: genai-rag-chatbot-workshop
-    Description: Workshop to implemente a retrieval augmented generation generative AI chatbot
+    Description: Workshop to implement a retrieval augmented generation generative AI chatbot
     Author: ilyiny
     SpdxLicenseId: MIT
     LicenseUrl: ./LICENSE
@@ -28,7 +28,7 @@ Globals:
       Variables:
         LOG_LEVEL: INFO
     Tags:
-      Project: amazon-sagemaker-saml-backend
+      Project: genai-rag-bot-workshop
 
 Outputs:
   RAGChatBotUrl:
@@ -36,6 +36,15 @@ Outputs:
     Value: !GetAtt App.Outputs.AppUrl
   
 Parameters:
+  LLMContextLength:
+    Type: Number
+    Default: 2048
+    Description: Max number of tokens in LLM context, input and output text
+
+  ECRImageURI:
+    Type: String
+    Description: Image URI of the chatbot front-end
+
   KendraIndexId:
     Type: String
     Description: Amazon Kendra index id
@@ -48,7 +57,7 @@ Parameters:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Type: String
-    Default: 10.0.0.0/16
+    Default: 12.0.0.0/16
     Description: CIDR block for a new VPC
 
 Resources:
@@ -66,6 +75,103 @@ Resources:
     Properties: 
       TemplateURL: cfn-templates/app.yaml
       Parameters:
+        APIId: !Ref RagAppApi
+        ECRImageURI: !Ref ECRImageURI
         VPCId: !GetAtt VPC.Outputs.VPCId
         PublicSubnet1: !GetAtt VPC.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt VPC.Outputs.PublicSubnet2
+
+
+######## Serverless backend ########
+  RagAppApi:
+      Type: AWS::Serverless::Api
+      Properties:
+        StageName: prod
+
+  RagAppFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./orchestration
+      Handler: rag_app.lambda_handler
+      PackageType: Zip
+      Environment:
+        Variables:
+          REGION: !Ref "AWS::Region"
+          KENDRA_INDEX_ID: !Ref KendraIndexId
+          SM_ENDPOINT_NAME: !Ref SageMakerLLMEndpointName       
+          LLM_CONTEXT_LENGTH: !Ref LLMContextLength
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /ragapp
+            Method: POST
+            RestApiId:
+              Ref: RagAppApi
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SageMakerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sagemaker:InvokeEndpoint
+                Resource: '*'
+        - PolicyName: LambdaLogsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*        
+        - PolicyName: DynamoDbAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                Resource: "*"
+        - PolicyName: KendraSearchPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kendra:Query
+                  - kendra:BatchGetDocumentStatus
+                  - kendra:Retrieve
+                Resource: "*"
+
+  MemoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MemoryTable
+      AttributeDefinitions:
+        - AttributeName: SessionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: SessionId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST

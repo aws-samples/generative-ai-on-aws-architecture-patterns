@@ -9,7 +9,7 @@ Outputs:
     Value: !Ref PublicSubnet1
 
   PublicSubnet2:
-    Value: !Ref PublicSubnet1
+    Value: !Ref PublicSubnet2
 
 Parameters:
   VPCCIDR:
