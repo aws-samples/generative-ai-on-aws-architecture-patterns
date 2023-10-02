@@ -1,4 +1,4 @@
-# Generative AI retrieval-augmented generation (RAG) chatbot workshop
+# Generative AI retrieval-augmented generation (RAG) chatbot workshop
 
 This **internal** repository contains instructions and examples to create your first generative AI chatbot connected to a knowledge base. 
 
@@ -38,10 +38,11 @@ git clone git@ssh.gitlab.aws.dev:ilyiny/genai-rag-bot-workshop.git
 - Run `chmod +x resize-disk.sh`
 - Run `./resize-disk.sh 100`
 
-#### Upgrade to Python 3.10
+#### Upgrade to Python 3.10
 The Lambda function you're going to implement requires Python 3.10 runtime. This in turn requires the Python 3.10 version of AWS SAM CLI. 
 
-Follow the instructions below to upgrade Cloud9 Python version to 3.10 by fol
+Follow the instructions below to upgrade Cloud9 Python version to 3.10:
+
 ---
 ```sh
 sudo yum update -y
