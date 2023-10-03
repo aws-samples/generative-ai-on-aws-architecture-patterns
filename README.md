@@ -409,6 +409,17 @@ Now ask some questions about Switzerland or on generally any topic, for example:
 
 ![](./static/img/rag-bot-ux-conversation.png)
 
+### Try out various Bedrock LLMs in console
+
+**TODO**: Optional activity, time permits:
+- Use Kendra search functionality in the console
+- use Bedrock playground to try:
+    - zero-shot prompt without Kendra context
+    - few-shot prompt without Kendra context
+    - zero-shot prompt with Kendra context
+    - few-shot prompt with Kendra context
+    - Conversational chain with Kendra context
+
 ## Conclusion
 Congratulations, you just build your first RAG-based generative AI application on AWS!
 
