@@ -59,7 +59,7 @@ CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
 
 # retriever.get_relevant_documents(query)
 if USE_BEDROCK == 'True':
-    llm = Bedrock(client=boto3.client(service_name='bedrock'),
+    llm = Bedrock(client=boto3.client(service_name='bedrock-runtime'),
                 model_id='anthropic.claude-v2'
     )
 else:

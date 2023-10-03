@@ -100,6 +100,7 @@ Resources:
           KENDRA_INDEX_ID: !Ref KendraIndexId
           SM_ENDPOINT_NAME: !Ref SageMakerLLMEndpointName       
           LLM_CONTEXT_LENGTH: !Ref LLMContextLength
+          USE_BEDROCK: "False"
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ApiEvent:
@@ -153,7 +154,7 @@ Resources:
                   - dynamodb:UpdateItem
                   - dynamodb:DeleteItem
                 Resource: "*"
-        - PolicyName: KendraSearchPolicy
+        - PolicyName: KendraSearchAccess
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -163,7 +164,15 @@ Resources:
                   - kendra:BatchGetDocumentStatus
                   - kendra:Retrieve
                 Resource: "*"
-
+        - PolicyName: BedrockRuntimeAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: "*"
+                
   MemoryTable:
     Type: AWS::DynamoDB::Table
     Properties:
