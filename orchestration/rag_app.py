@@ -20,7 +20,7 @@ SM_ENDPOINT_NAME = os.environ.get('SM_ENDPOINT_NAME')
 LLM_CONTEXT_LENGTH = os.environ.get('LLM_CONTEXT_LENGTH', '2048')
 USE_BEDROCK = os.environ.get('USE_BEDROCK', "False")
 
-# Generative LLM 
+# Generative LLM
 
 # Content Handler for Falcon40b-instruct - please uncomment below if you used this option
 class ContentHandler(LLMContentHandler):
@@ -31,24 +31,24 @@ class ContentHandler(LLMContentHandler):
         input_str = json.dumps(
             {
                 "inputs": prompt,
-                "parameters": 
+                "parameters":
                 {
                     "do_sample": False,
-                    "repetition_penalty": 1.1, 
-                    "return_full_text": False, 
+                    "repetition_penalty": 1.1,
+                    "return_full_text": False,
                     "max_new_tokens": 1024
                 }
             }
         )
         return input_str.encode('utf-8')
-    
+
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
         return response_json[0]["generated_text"]
 
 content_handler = ContentHandler()
-    
-_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language. 
+
+_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
 Chat History:
 {chat_history}
@@ -68,53 +68,57 @@ else:
         endpoint_name=SM_ENDPOINT_NAME,
         region_name=REGION,
         # model_kwargs={}
-        content_handler=content_handler, 
+        content_handler=content_handler,
     )
 
 def lambda_handler(event, context):
 
-    print(event)
+    try:
+        print(event)
 
-    body = json.loads(event['body'])
-    print(body)
+        body = json.loads(event['body'])
+        print(body)
 
-    query = body['query']
-    uuid = body['uuid']
-    print(query)
-    print(uuid)
+        query = body['query']
+        uuid = body['uuid']
+        print(query)
+        print(uuid)
 
-    message_history = DynamoDBChatMessageHistory(
-        table_name="MemoryTable", 
-        session_id=uuid
-    )
-    memory = ConversationBufferWindowMemory(
-        memory_key="chat_history",
-        chat_memory=message_history, 
-        return_messages=True, 
-        k=3
-    )
+        message_history = DynamoDBChatMessageHistory(
+            table_name="MemoryTable",
+            session_id=uuid
+        )
+        memory = ConversationBufferWindowMemory(
+            memory_key="chat_history",
+            chat_memory=message_history,
+            return_messages=True,
+            k=3
+        )
 
-    # This retriever is using the new Kendra retrieve API https://aws.amazon.com/blogs/machine-learning/quickly-build-high-accuracy-generative-ai-applications-on-enterprise-data-using-amazon-kendra-langchain-and-large-language-models/
-    retriever = AmazonKendraRetriever(
-        index_id=KENDRA_INDEX_ID,
-        region_name=REGION,
-        top_k=2
-    )
-    
-    qa = ConversationalRetrievalChain.from_llm(
-        llm=llm, 
-        retriever=retriever, 
-        memory=memory, 
-        condense_question_prompt=CONDENSE_QUESTION_PROMPT, 
-        verbose=True
-    )
+        # This retriever is using the new Kendra retrieve API https://aws.amazon.com/blogs/machine-learning/quickly-build-high-accuracy-generative-ai-applications-on-enterprise-data-using-amazon-kendra-langchain-and-large-language-models/
+        retriever = AmazonKendraRetriever(
+            index_id=KENDRA_INDEX_ID,
+            region_name=REGION,
+            top_k=2
+        )
 
-    response = qa.run(query)   
-    clean_response = response.replace('\n','').strip()
+        qa = ConversationalRetrievalChain.from_llm(
+            llm=llm,
+            retriever=retriever,
+            memory=memory,
+            condense_question_prompt=CONDENSE_QUESTION_PROMPT,
+            verbose=True
+        )
 
-    print(clean_response)
-
+        response = qa.run(query)
+        clean_response = response.replace('\n','').strip()
+        status_code = 200
+        print(clean_response)
+    except Exception as e:
+        print(e)
+        status_code = 500
+        clean_response = e
     return {
-        'statusCode': 200,
+        'statusCode': status_code,
         'body': json.dumps(f'{clean_response}')
     }
