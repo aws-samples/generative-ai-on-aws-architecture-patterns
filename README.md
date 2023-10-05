@@ -92,7 +92,8 @@ sam --version
 ```
 
 ### Setup SageMaker Studio
-You're going to use SageMaker Studio to deploy a real-time LLM endpoint. You don't need Studio and the endpoint if you use Amazon Bedrock API to connect to an LLM.
+You're going to use SageMaker Studio to deploy a real-time LLM endpoint. 
+You don't need Studio and the endpoint if you use Amazon Bedrock API to connect to an LLM. You can also skip all SageMaker-related sections if you're going to use Amazon Bedrock only.
 
 To setup Studio:
 1. [Provision a SageMaker domain](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-onboard.html) if you don't have one
@@ -128,7 +129,7 @@ Use the following inline permission policy to add to the user profile execution 
 ```
 **TODO**: attach the inline policy to the execution role via CLI
 
-Add `bedrock.amazonaws.com` to the execution role trust relationships:
+Add `bedrock.amazonaws.com` to the user profile execution role trust relationships:
 ```json
 {
     "Effect": "Allow",
@@ -346,6 +347,7 @@ First, it condenses the current question and the chat history into a standalone 
 With the declarative nature of LangChain you can easily use a separate language model for each step. For example, you can use a cheaper and faster model for question summarization task, and a larger, more advanced and expensive model for answering the question. In this workshop you use one model for both steps.
 
 To understand how the end-to-end orchestration works and how the components are linked together, look into the orchestration implementation in the Lambda function `orchestration/rag_app.py`.
+
 #### Orchestration layer deployment
 In this section you're going to deploy the end-to-end application stack, including UX, the backend API, and the serverless orchestration layer implemented as a Lambda function.
 
@@ -386,6 +388,9 @@ You need to provide following parameters to pass to the SAM CloudFormation templ
 - `ECRImageURI`: use the ECR URI for `rag-app` image you built in the **Chatbot app** step
 - `KendraIndexId`: use the id of the Kendra index you created
 - `SageMakerLLMEndpointName`: use the endpoint name you created
+- `VPCCIDR`: CIDR block for the VPC, you can leave default if there is no conflicts with existing VPCs in your account
+
+Please note, if you don't deploy a SageMaker LLM endpoint, you can use Bedrock API only.
 
 Provide configuration parameters and wait until the CloudFormation stack deployment succeeded. 
 
