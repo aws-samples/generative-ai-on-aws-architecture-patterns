@@ -57,19 +57,21 @@ Standalone question:"""
 
 CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
 
-# retriever.get_relevant_documents(query)
-if USE_BEDROCK == 'True':
-    llm = Bedrock(client=boto3.client(service_name='bedrock-runtime'),
-                model_id='anthropic.claude-v2'
-    )
-else:
-    # SageMaker langchain integration, to assist invoking SageMaker endpoint.
-    llm = SagemakerEndpoint(
-        endpoint_name=SM_ENDPOINT_NAME,
-        region_name=REGION,
-        # model_kwargs={}
-        content_handler=content_handler,
-    )
+def get_llm(use_bedrock):
+    # retriever.get_relevant_documents(query)
+    if USE_BEDROCK == 'True':
+        llm = Bedrock(client=boto3.client(service_name='bedrock-runtime'),
+                    model_id='anthropic.claude-v2'
+        )
+    else:
+        # SageMaker langchain integration, to assist invoking SageMaker endpoint.
+        llm = SagemakerEndpoint(
+            endpoint_name=SM_ENDPOINT_NAME,
+            region_name=REGION,
+            # model_kwargs={}
+            content_handler=content_handler,
+        )
+    return llm
 
 def lambda_handler(event, context):
 
@@ -81,8 +83,12 @@ def lambda_handler(event, context):
 
         query = body['query']
         uuid = body['uuid']
+        USE_BEDROCK = body['USE_BEDROCK']
         print(query)
         print(uuid)
+        print(USE_BEDROCK)
+
+        llm = get_llm(USE_BEDROCK)
 
         message_history = DynamoDBChatMessageHistory(
             table_name="MemoryTable",
