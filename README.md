@@ -16,17 +16,17 @@ You need access to an AWS account. You can use your own account or the shared ac
 
 If you use your own account make sure to fulfill the following pre-requisites before the workshop:
 1. Admin access to the account
-1. Quota for `ml.g5.12xlarge` is set to at least 1. You can increase the quota in AWS console as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
+1. If you'd like to experiment with an LLM real-time SageMaker endpoint, you must set the quota for `ml.g5.12xlarge` for your AWS Account to at least 1. You can increase the quota in AWS console as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
 1. [Request access](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html) to Amazon Bedrock models
-3. [AWS Console access isengard](https://isengard.amazon.com/console-access)
+3. [AWS Console access](https://console.aws.amazon.com/console/home?#)
 
 The next sections contain step-by-step instructions how to setup the required development environments.
 
 ### Clone the workshop repository
-Clone the internal GitLab [repo](https://gitlab.aws.dev/ilyiny/genai-rag-bot-workshop) to your local notebook:
+Clone the public GitHub [repo](https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns) to your local notebook:
 
 ```sh
-git clone git@ssh.gitlab.aws.dev:ilyiny/genai-rag-bot-workshop.git
+git clone https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns.git
 ```
 
 ### Setup AWS Cloud9 environment
