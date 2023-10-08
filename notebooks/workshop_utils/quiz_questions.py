@@ -67,64 +67,12 @@ class Quiz:
 # Lab 01
 lab1_question1 = Quiz(
     question={
-        "question": "What is a SageMaker user profile execution role?",
+        "question": "Question",
         "options": [
-            "IAM role which is assumed by SageMaker to access and create resources on your behalf within Studio",
-            "User IAM role used to access AWS Console",
-            "Internal SageMaker service execution role",
-            "IAM role you need to assume to sign in Studio",
-        ],
-        "correctIndex": 0,
-    }
-)
-
-lab1_question2 = Quiz(
-    question={
-        "question": "What is the purpose of VPC endpoint policy?",
-        "options": [
-            "To control VPC network egress traffic",
-            "To control which AWS principal can use endpoint to access an AWS service",
-            "To control access to Amazon S3 buckets",
-            "To control DNS resolution for external DNS names",
-        ],
-        "correctIndex": 1,
-    }
-)
-
-lab1_question3 = Quiz(
-    question={
-        "question": "What network configuration can you provide for SageMaker jobs?",
-        "options": [
-            "VPC, NACLs, and the execution role",
-            "VPC, Security groups, execution role, and AWS KMS keys",
-            "Security groups, subnets, network isolation, and intercontainer traffic encryption",
-            "CIDR, traffic encryption, and AWS KMS keys",
-        ],
-        "correctIndex": 2,
-    }
-)
-
-lab1_question4 = Quiz(
-    question={
-        "question": "If a SageMaker domain is in Vpc Only mode, which of the following statements is correct?",
-        "options": [
-            "The egress internet traffic from Studio notebooks is routed via SageMaker-owned Internet Gateway",
-            "The egress internet traffic from Studio notebooks is routed via SageMaker-owned NAT Gateway",
-            "The egress internet traffic from Studio notebooks is routed as configured in your VPC route tables",
-            "It's not possible to access internet from Studio notebooks",
-        ],
-        "correctIndex": 2,
-    }
-)
-
-lab1_question5 = Quiz(
-    question={
-        "question": "How can you control user permissions in Studio?",
-        "options": [
-            "By configuring IAM permission policies for user profile execution roles",
-            "By configuring IAM permission policies for IAM role assumed by the user after signing in AWS Account",
-            "By configuring resource policies on SageMaker resources",
-            "By configuring iam:PassRole for sagemaker.amazonaws.com",
+            "option 1",
+            "option 2",
+            "option 3",
+            "option 4",
         ],
         "correctIndex": 0,
     }

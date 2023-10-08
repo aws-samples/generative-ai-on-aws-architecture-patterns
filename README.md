@@ -420,9 +420,8 @@ Now ask some questions about Switzerland or on generally any topic, for example:
 - Use Kendra search functionality in the console
 - use Bedrock playground to try:
     - zero-shot prompt without Kendra context
-    - few-shot prompt without Kendra context
     - zero-shot prompt with Kendra context
-    - few-shot prompt with Kendra context
+    - Engineered prompt with Kendra context. For a prompt example see [here](https://smith.langchain.com/hub/hwchase17/weblangchain-generation)
     - Conversational chain with Kendra context
 
 ## Conclusion
@@ -453,6 +452,7 @@ The following is the collection of useful links to the related resources.
 - [Implementing Generative AI on AWS workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/80ae1ed2-f415-4d3d-9eb0-e9118c147bd4/en-US) – a public workshop
 - [Large Language Model - Query Disambiguation for Conversational Retrieval, and Generative Question Answering](https://github.com/aws-solutions/qnabot-on-aws/tree/main/docs/LLM_Retrieval_and_generative_question_answering)
 - [QnABot on AWS](https://aws.amazon.com/solutions/implementations/qnabot-on-aws/) - a public solution in AWS Solutions Library
+- [Building (and Breaking) WebLangChain](https://blog.langchain.dev/weblangchain/)
 
 ## Contributors
 The baseline of source code and overall architecture were taken from the public AWS workshop [Implementing Generative AI on AWS](https://catalog.us-east-1.prod.workshops.aws/workshops/80ae1ed2-f415-4d3d-9eb0-e9118c147bd4/en-US).
