@@ -86,21 +86,25 @@ def clear():
 def write_logo():
     col1, col2, col3 = st.columns([5, 1, 5])
     with col2:
-        st.image(AI_ICON, use_column_width='always') 
+        st.image(AI_ICON, use_column_width='always')
 
 
 def write_top_bar():
-    col1, col2, col3, col4 = st.columns([1,10,2,2])
+    col1, col2, col3, col4, col5 = st.columns([1,6,2,2,2])
     with col1:
         st.image(AI_ICON, use_column_width='always')
     with col2:
         st.write(f"<h4 class='main-header'>RAG Bot</h4>",  unsafe_allow_html=True)
+    with col5:
+        bedrock = st.checkbox('Use Bedrock')
+        st.session_state['USE_BEDROCK'] = bedrock
     with col3:
         if st.button("Clear Chat", key="clear"):
             clear()
     with col4:
         if st.button('Reset Session'):
             refresh()
+
 
 write_top_bar()
 
@@ -138,7 +142,8 @@ if 'past' not in st.session_state:
 ## Function for taking user prompt as input followed by producing AI generated responses
 def generate_response(prompt):
     url = f'{base_url}/ragapp'
-    body = {"query": prompt, "uuid": session_id}
+    USE_BEDROCK = st.session_state['USE_BEDROCK']
+    body = {"query": prompt, "uuid": session_id, "USE_BEDROCK": USE_BEDROCK}
     response = requests.post(url, headers=headers, data=json.dumps(body), verify=False)
     output_text = response.text
     return output_text
@@ -150,10 +155,9 @@ with response_container:
         response = generate_response(user_input)
         st.session_state.past.append(user_input)
         st.session_state.generated.append(response)
-        
+
     if st.session_state['generated']:
         for i in range(len(st.session_state['generated'])):
             if i > 0:
                 message(st.session_state['past'][i-1], is_user=True, key=str(i) + '_user')
             message(st.session_state["generated"][i], key=str(i))
-    

@@ -20,7 +20,7 @@ SM_ENDPOINT_NAME = os.environ.get('SM_ENDPOINT_NAME')
 LLM_CONTEXT_LENGTH = os.environ.get('LLM_CONTEXT_LENGTH', '2048')
 USE_BEDROCK = os.environ.get('USE_BEDROCK', "False")
 
-# Generative LLM 
+# Generative LLM
 
 # Content Handler for Falcon40b-instruct - please uncomment below if you used this option
 class ContentHandler(LLMContentHandler):
@@ -31,24 +31,24 @@ class ContentHandler(LLMContentHandler):
         input_str = json.dumps(
             {
                 "inputs": prompt,
-                "parameters": 
+                "parameters":
                 {
                     "do_sample": False,
-                    "repetition_penalty": 1.1, 
-                    "return_full_text": False, 
+                    "repetition_penalty": 1.1,
+                    "return_full_text": False,
                     "max_new_tokens": 1024
                 }
             }
         )
         return input_str.encode('utf-8')
-    
+
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
         return response_json[0]["generated_text"]
 
 content_handler = ContentHandler()
-    
-_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language. 
+
+_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
 Chat History:
 {chat_history}
@@ -57,64 +57,74 @@ Standalone question:"""
 
 CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
 
-# retriever.get_relevant_documents(query)
-if USE_BEDROCK == 'True':
-    llm = Bedrock(client=boto3.client(service_name='bedrock-runtime'),
-                model_id='anthropic.claude-v2'
-    )
-else:
-    # SageMaker langchain integration, to assist invoking SageMaker endpoint.
-    llm = SagemakerEndpoint(
-        endpoint_name=SM_ENDPOINT_NAME,
-        region_name=REGION,
-        # model_kwargs={}
-        content_handler=content_handler, 
-    )
+def get_llm(use_bedrock):
+    # retriever.get_relevant_documents(query)
+    if USE_BEDROCK == 'True':
+        llm = Bedrock(client=boto3.client(service_name='bedrock-runtime'),
+                    model_id='anthropic.claude-v2'
+        )
+    else:
+        # SageMaker langchain integration, to assist invoking SageMaker endpoint.
+        llm = SagemakerEndpoint(
+            endpoint_name=SM_ENDPOINT_NAME,
+            region_name=REGION,
+            # model_kwargs={}
+            content_handler=content_handler,
+        )
+    return llm
 
 def lambda_handler(event, context):
 
-    print(event)
+    try:
+        print(event)
 
-    body = json.loads(event['body'])
-    print(body)
+        body = json.loads(event['body'])
+        print(body)
 
-    query = body['query']
-    uuid = body['uuid']
-    print(query)
-    print(uuid)
+        query = body['query']
+        uuid = body['uuid']
+        USE_BEDROCK = body['USE_BEDROCK']
+        print(query)
+        print(uuid)
+        print(USE_BEDROCK)
 
-    message_history = DynamoDBChatMessageHistory(
-        table_name="MemoryTable", 
-        session_id=uuid
-    )
-    memory = ConversationBufferWindowMemory(
-        memory_key="chat_history",
-        chat_memory=message_history, 
-        return_messages=True, 
-        k=3
-    )
+        llm = get_llm(USE_BEDROCK)
 
-    # This retriever is using the new Kendra retrieve API https://aws.amazon.com/blogs/machine-learning/quickly-build-high-accuracy-generative-ai-applications-on-enterprise-data-using-amazon-kendra-langchain-and-large-language-models/
-    retriever = AmazonKendraRetriever(
-        index_id=KENDRA_INDEX_ID,
-        region_name=REGION,
-        top_k=2
-    )
-    
-    qa = ConversationalRetrievalChain.from_llm(
-        llm=llm, 
-        retriever=retriever, 
-        memory=memory, 
-        condense_question_prompt=CONDENSE_QUESTION_PROMPT, 
-        verbose=True
-    )
+        message_history = DynamoDBChatMessageHistory(
+            table_name="MemoryTable",
+            session_id=uuid
+        )
+        memory = ConversationBufferWindowMemory(
+            memory_key="chat_history",
+            chat_memory=message_history,
+            return_messages=True,
+            k=3
+        )
 
-    response = qa.run(query)   
-    clean_response = response.replace('\n','').strip()
+        # This retriever is using the new Kendra retrieve API https://aws.amazon.com/blogs/machine-learning/quickly-build-high-accuracy-generative-ai-applications-on-enterprise-data-using-amazon-kendra-langchain-and-large-language-models/
+        retriever = AmazonKendraRetriever(
+            index_id=KENDRA_INDEX_ID,
+            region_name=REGION,
+            top_k=2
+        )
 
-    print(clean_response)
+        qa = ConversationalRetrievalChain.from_llm(
+            llm=llm,
+            retriever=retriever,
+            memory=memory,
+            condense_question_prompt=CONDENSE_QUESTION_PROMPT,
+            verbose=True
+        )
 
+        response = qa.run(query)
+        clean_response = response.replace('\n','').strip()
+        status_code = 200
+        print(clean_response)
+    except Exception as e:
+        print(e)
+        status_code = 500
+        clean_response = e
     return {
-        'statusCode': 200,
+        'statusCode': status_code,
         'body': json.dumps(f'{clean_response}')
     }
