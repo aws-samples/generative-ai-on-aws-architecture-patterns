@@ -100,7 +100,7 @@ Resources:
           KENDRA_INDEX_ID: !Ref KendraIndexId
           SM_ENDPOINT_NAME: !Ref SageMakerLLMEndpointName       
           LLM_CONTEXT_LENGTH: !Ref LLMContextLength
-          USE_BEDROCK: "False"
+          BEDROCK_MODEL_ID: "anthropic.claude-v2"
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ApiEvent:

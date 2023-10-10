@@ -18,9 +18,7 @@ REGION = os.environ.get('REGION')
 KENDRA_INDEX_ID = os.environ.get('KENDRA_INDEX_ID')
 SM_ENDPOINT_NAME = os.environ.get('SM_ENDPOINT_NAME')
 LLM_CONTEXT_LENGTH = os.environ.get('LLM_CONTEXT_LENGTH', '2048')
-USE_BEDROCK = os.environ.get('USE_BEDROCK', "False")
-
-# Generative LLM
+BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-v2')
 
 # Content Handler for Falcon40b-instruct - please uncomment below if you used this option
 class ContentHandler(LLMContentHandler):
@@ -59,9 +57,9 @@ CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
 
 def get_llm(use_bedrock):
     # retriever.get_relevant_documents(query)
-    if USE_BEDROCK == 'True':
+    if use_bedrock:
         llm = Bedrock(client=boto3.client(service_name='bedrock-runtime'),
-                    model_id='anthropic.claude-v2'
+                    model_id=BEDROCK_MODEL_ID
         )
     else:
         # SageMaker langchain integration, to assist invoking SageMaker endpoint.
@@ -83,12 +81,12 @@ def lambda_handler(event, context):
 
         query = body['query']
         uuid = body['uuid']
-        USE_BEDROCK = body['USE_BEDROCK']
+        use_bedrock = body.get('USE_BEDROCK')
         print(query)
         print(uuid)
-        print(USE_BEDROCK)
+        print(use_bedrock)
 
-        llm = get_llm(USE_BEDROCK)
+        llm = get_llm(use_bedrock)
 
         message_history = DynamoDBChatMessageHistory(
             table_name="MemoryTable",
