@@ -9,7 +9,7 @@ RUN pip install -r requirements.txt
 
 COPY app.py app.py
 
-COPY aws.png aws.png
+COPY app_icon.png app_icon.png
 
 EXPOSE 80
 

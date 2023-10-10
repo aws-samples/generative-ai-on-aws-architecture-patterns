@@ -16,17 +16,17 @@ You need access to an AWS account. You can use your own account or the shared ac
 
 If you use your own account make sure to fulfill the following pre-requisites before the workshop:
 1. Admin access to the account
-1. Quota for `ml.g5.12xlarge` is set to at least 1. You can increase the quota in AWS console as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
+1. If you'd like to experiment with an LLM real-time SageMaker endpoint, you must set the quota for `ml.g5.12xlarge` for your AWS Account to at least 1. You can increase the quota in AWS console as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
 1. [Request access](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html) to Amazon Bedrock models
-3. [AWS Console access isengard](https://isengard.amazon.com/console-access)
+3. [AWS Console access](https://console.aws.amazon.com/console/home?#)
 
 The next sections contain step-by-step instructions how to setup the required development environments.
 
 ### Clone the workshop repository
-Clone the internal GitLab [repo](https://gitlab.aws.dev/ilyiny/genai-rag-bot-workshop) to your local notebook:
+Clone the public GitHub [repo](https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns) to your local notebook:
 
 ```sh
-git clone git@ssh.gitlab.aws.dev:ilyiny/genai-rag-bot-workshop.git
+git clone https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns.git
 ```
 
 ### Setup AWS Cloud9 environment
@@ -92,7 +92,8 @@ sam --version
 ```
 
 ### Setup SageMaker Studio
-You're going to use SageMaker Studio to deploy a real-time LLM endpoint. You don't need Studio and the endpoint if you use Amazon Bedrock API to connect to an LLM.
+You're going to use SageMaker Studio to deploy a real-time LLM endpoint. 
+You don't need Studio and the endpoint if you use Amazon Bedrock API to connect to an LLM. You can also skip all SageMaker-related sections if you're going to use Amazon Bedrock only.
 
 To setup Studio:
 1. [Provision a SageMaker domain](https://docs.aws.amazon.com/sagemaker/latest/dg/gs-studio-onboard.html) if you don't have one
@@ -128,7 +129,7 @@ Use the following inline permission policy to add to the user profile execution 
 ```
 **TODO**: attach the inline policy to the execution role via CLI
 
-Add `bedrock.amazonaws.com` to the execution role trust relationships:
+Add `bedrock.amazonaws.com` to the user profile execution role trust relationships:
 ```json
 {
     "Effect": "Allow",
@@ -346,6 +347,7 @@ First, it condenses the current question and the chat history into a standalone 
 With the declarative nature of LangChain you can easily use a separate language model for each step. For example, you can use a cheaper and faster model for question summarization task, and a larger, more advanced and expensive model for answering the question. In this workshop you use one model for both steps.
 
 To understand how the end-to-end orchestration works and how the components are linked together, look into the orchestration implementation in the Lambda function `orchestration/rag_app.py`.
+
 #### Orchestration layer deployment
 In this section you're going to deploy the end-to-end application stack, including UX, the backend API, and the serverless orchestration layer implemented as a Lambda function.
 
@@ -386,6 +388,9 @@ You need to provide following parameters to pass to the SAM CloudFormation templ
 - `ECRImageURI`: use the ECR URI for `rag-app` image you built in the **Chatbot app** step
 - `KendraIndexId`: use the id of the Kendra index you created
 - `SageMakerLLMEndpointName`: use the endpoint name you created
+- `VPCCIDR`: CIDR block for the VPC, you can leave default if there is no conflicts with existing VPCs in your account
+
+Please note, if you don't deploy a SageMaker LLM endpoint, you can use Bedrock API only.
 
 Provide configuration parameters and wait until the CloudFormation stack deployment succeeded. 
 
@@ -415,9 +420,8 @@ Now ask some questions about Switzerland or on generally any topic, for example:
 - Use Kendra search functionality in the console
 - use Bedrock playground to try:
     - zero-shot prompt without Kendra context
-    - few-shot prompt without Kendra context
     - zero-shot prompt with Kendra context
-    - few-shot prompt with Kendra context
+    - Engineered prompt with Kendra context. For a prompt example see [here](https://smith.langchain.com/hub/hwchase17/weblangchain-generation)
     - Conversational chain with Kendra context
 
 ## Conclusion
@@ -448,6 +452,7 @@ The following is the collection of useful links to the related resources.
 - [Implementing Generative AI on AWS workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/80ae1ed2-f415-4d3d-9eb0-e9118c147bd4/en-US) – a public workshop
 - [Large Language Model - Query Disambiguation for Conversational Retrieval, and Generative Question Answering](https://github.com/aws-solutions/qnabot-on-aws/tree/main/docs/LLM_Retrieval_and_generative_question_answering)
 - [QnABot on AWS](https://aws.amazon.com/solutions/implementations/qnabot-on-aws/) - a public solution in AWS Solutions Library
+- [Building (and Breaking) WebLangChain](https://blog.langchain.dev/weblangchain/)
 
 ## Contributors
 The baseline of source code and overall architecture were taken from the public AWS workshop [Implementing Generative AI on AWS](https://catalog.us-east-1.prod.workshops.aws/workshops/80ae1ed2-f415-4d3d-9eb0-e9118c147bd4/en-US).

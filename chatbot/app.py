@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 import streamlit as st
 from streamlit_chat import message
 from streamlit_extras.colored_header import colored_header
@@ -11,7 +14,7 @@ import uuid
 
 
 
-AI_ICON = "aws.png"
+AI_ICON = "app_icon.png"
 base_url = os.getenv('BASE_URL')
 headers = {'Content-Type': 'application/json'}
 
@@ -23,11 +26,11 @@ with st.sidebar:
     st.markdown('''
     ## About
     This app is an LLM-powered chatbot built using:
-    - [Streamlit](https://streamlit.io/)
     - [Amazon SageMaker](https://aws.amazon.com/sagemaker/)
     - [Amazon Bedrock](https://aws.amazon.com/bedrock/)
     - [Amazon Kendra](https://aws.amazon.com/kendra/)
-
+    - [Streamlit](https://streamlit.io/)
+    - [LangChain](https://python.langchain.com/docs/get_started/introduction)
     ''')
     add_vertical_space(5)
     st.write('Made with ❤ for Tech Summit EMEA')
