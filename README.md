@@ -5,7 +5,7 @@ This repository contains instructions and examples to create your first generati
 In this workshop you're going to learn:
 - a foundational generative AI design pattern: retrieval augmented generation (RAG)
 - how to use Amazon Kendra to implement a knowledge base with a document index
-- how to ingest documents into the knowledge base using Kendra connectors
+- how to ingest documents into the knowledge base using Amazon Kendra connectors
 - how to use Amazon SageMaker JumpStart to deploy an open source large language model (LLM) as a real-time endpoint and use the endpoint for text generation
 - how to use HuggingFace TGI container and Amazon SageMaker to deploy an LLM as a real-time endpoint
 - how to use Amazon Bedrock to connect to LLMs and use them via an API
@@ -16,9 +16,11 @@ You need access to an AWS account. You can use your own account or the shared ac
 
 If you use your own account make sure to fulfill the following pre-requisites before the workshop:
 1. Admin access to the account
-1. If you'd like to experiment with an LLM real-time SageMaker endpoint, you must set the quota for `ml.g5.12xlarge` for your AWS Account to at least 1. You can increase the quota in AWS console as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
 1. [Request access](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html) to Amazon Bedrock models
-3. [AWS Console access](https://console.aws.amazon.com/console/home?#)
+1. [AWS Console access](https://console.aws.amazon.com/console/home?#)
+1. If you'd like to experiment with an LLM real-time SageMaker endpoint, you must set the quota for `ml.g5.12xlarge` for your AWS Account to at least 1. You can increase the quota in AWS console as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
+
+![](/static/img/sagemaker-quota-increase.png)
 
 The next sections contain step-by-step instructions how to setup the required development environments.
 
@@ -216,7 +218,7 @@ If you'd like to ingest some documents from an Amazon S3 bucket, you can create 
 In this workshop you are going to use Amazon Kendra to implement a retriever part of the RAG chatbot application.
 
 Create Kendra index:
-1. Navigate to [Kendra console](https://us-east-1.console.aws.amazon.com/kendra/home?region=us-east-1#/)
+1. Navigate to [Amazon Kendra console](https://us-east-1.console.aws.amazon.com/kendra/home?region=us-east-1#/)
 2. Choose **Create and index**
 ![](./static/img/kendra-create-index.png)
 3. Provide a name for the index
@@ -228,7 +230,7 @@ Create Kendra index:
 ![](.//static/img/kendra-choose-edition.png)
 8. Review and choose **Create**
 
-Wait until the Kendra index is created and ready:
+Wait until the Amazon Kendra index is created and ready:
 
 ![](./static/img/kendra-index.png)
 
@@ -237,17 +239,17 @@ Wait until the Kendra index is created and ready:
 #### Amazon OpenSearch
 🚧 Available in the next version of the workshop!
 
-#### Ingestion - Kendra
-You're going to ingest public press releases from Swiss Government web site https://www.admin.ch/ using a built-in [Kendra Web Crawler connector 2.0](https://docs.aws.amazon.com/kendra/latest/dg/data-source-v2-web-crawler.html).
+#### Ingestion - Amazon Kendra
+You're going to ingest public press releases from Swiss Government web site https://www.admin.ch/ using a built-in [Amazon Kendra Web Crawler connector 2.0](https://docs.aws.amazon.com/kendra/latest/dg/data-source-v2-web-crawler.html).
 
 To create web crawler and ingest documents to the index:
-1. Navigate to the created index in the [Kendra console](https://us-east-1.console.aws.amazon.com/kendra/home?region=us-east-1#indexes) 
+1. Navigate to the created index in the [Amazon Kendra console](https://us-east-1.console.aws.amazon.com/kendra/home?region=us-east-1#indexes) 
 2. Choose **Add data source**
 ![](./static/img/kendra-add-data-source.png)
 3. Choose **Web Crawler v2.0** connector and click **Add connector** You can choose any other connector to connect to a data source of your choice and ingest documents from that data source
 ![](./static/img/kendra-web-crawler.png)
 
-The following instruction assumes you use the Web Crawler to ingest the documents from the site https://www.admin.ch/. If you use another data source or another web URL, configure the Kendra connector accordingly.
+The following instruction assumes you use the Web Crawler to ingest the documents from the site https://www.admin.ch/. If you use another data source or another web URL, configure the Amazon Kendra connector accordingly.
 
 In the **Add data source** pane:
 
@@ -321,9 +323,9 @@ You use [LangChain](https://python.langchain.com/en/latest/) framework to implem
 The main components for the LangChain-based orchestrator are:
 
 `AmazonKendraRetriever`
-You use a built-in Kendra retriever in LangChain. This class provides an abstraction of a retriever component and allows LangChain to interact with Kendra as part of conversation chain.
+You use a built-in Amazon Kendra retriever in LangChain. This class provides an abstraction of a retriever component and allows LangChain to interact with Amazon Kendra as part of conversation chain.
 
-You also have a custom implementation of a Kendra retriever, `KendraIndexRetriever` class in the `orchestration/kendra` folder. This class is not used in the workshop. The implementation for your reference, you can try to use own retriever for any specific requirements.
+You also have a custom implementation of a Amazon Kendra retriever, `KendraIndexRetriever` class in the `orchestration/kendra` folder. This class is not used in the workshop. The implementation for your reference, you can try to use own retriever for any specific requirements.
 
 `ConversationalBufferWindowMemory`
 This built-in LangChain class implements chat memory. There are two types of memory:
@@ -386,11 +388,11 @@ sam deploy --guided
 You need to provide following parameters to pass to the SAM CloudFormation template:
 - `LLMContextLength`: use default 2048 if you use Falcon 40B endpoint otherwise set accordingly to your LLM of choice
 - `ECRImageURI`: use the ECR URI for `rag-app` image you built in the **Chatbot app** step
-- `KendraIndexId`: use the id of the Kendra index you created
+- `KendraIndexId`: use the id of the Amazon Kendra index you created
 - `SageMakerLLMEndpointName`: use the endpoint name you created
 - `VPCCIDR`: CIDR block for the VPC, you can leave default if there is no conflicts with existing VPCs in your account
 
-Please note, if you don't deploy a SageMaker LLM endpoint, you can use Bedrock API only.
+Please note, if you don't deploy a SageMaker LLM endpoint, you can use Amazon Bedrock API only.
 
 Provide configuration parameters and wait until the CloudFormation stack deployment succeeded. 
 
@@ -414,15 +416,15 @@ Now ask some questions about Switzerland or on generally any topic, for example:
 
 ![](./static/img/rag-bot-ux-conversation.png)
 
-### Try out various Bedrock LLMs in console
+### Try out various Amazon Bedrock LLMs in console
 
 **TODO**: Optional activity, time permits:
-- Use Kendra search functionality in the console
-- use Bedrock playground to try:
-    - zero-shot prompt without Kendra context
-    - zero-shot prompt with Kendra context
-    - Engineered prompt with Kendra context. For a prompt example see [here](https://smith.langchain.com/hub/hwchase17/weblangchain-generation)
-    - Conversational chain with Kendra context
+- Use Amazon Kendra search functionality in the console
+- use Amazon Bedrock playground to try:
+    - zero-shot prompt without search context
+    - zero-shot prompt with search context
+    - Engineered prompt with search context. For a prompt example see [here](https://smith.langchain.com/hub/hwchase17/weblangchain-generation)
+    - Conversational chain with search context
 
 ## Conclusion
 Congratulations, you just build your first RAG-based generative AI application on AWS!
@@ -439,7 +441,7 @@ Remove the SageMaker endpoint:
 
 Delete the Cloud9 environment is you don't need it anymore.
 
-Delete the Kendra data source and Kendra index.
+Delete the Amazon Kendra data source and Amazon Kendra index.
 
 ## Resources
 The following is the collection of useful links to the related resources.
@@ -459,16 +461,16 @@ The baseline of source code and overall architecture were taken from the public 
 
 The workshop authors:
 
-[Yevgeniy Ilyin](https://phonetool.amazon.com/users/ilyiny) | [Nikita Fedkin](https://phonetool.amazon.com/users/nikitafe) |
+[Yevgeniy Ilyin](https://www.linkedin.com/in/yevgeniyilyin/) | [Nikita Fedkin](https://www.linkedin.com/in/nikitafed/) |
 :---:|:---:
 ![](./static/img/hyperbadge_ilyiny.png)  |  ![](./static/img/hyperbadge_nikitafe.png)
 
 
 Special thanks to:
-- [Mikael Mutafyan](https://phonetool.amazon.com/users/mimuta)
-- [Aris Tsakpinis](https://phonetool.amazon.com/users/tsaris)
+- [Mikael Mutafyan](https://www.linkedin.com/in/mikaelmutafyan/)
+- [Aris Tsakpinis](https://www.linkedin.com/in/aris-tsakpinis-15a320143/)
 
-for help with questions, recommendations, and workshop review.
+for help with questions, recommendations, and the workshop review.
 
 ---
 
