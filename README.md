@@ -459,14 +459,14 @@ The baseline of source code and overall architecture were taken from the public 
 
 The workshop authors:
 
-[Yevgeniy Ilyin](https://phonetool.amazon.com/users/ilyiny) | [Nikita Fedkin](https://phonetool.amazon.com/users/nikitafe) |
+[Yevgeniy Ilyin](https://linkedin.com/in/yevgeniyilyin) | [Nikita Fedkin](https://linkedin.com/in/nikitafed) |
 :---:|:---:
 ![](./static/img/hyperbadge_ilyiny.png)  |  ![](./static/img/hyperbadge_nikitafe.png)
 
 
 Special thanks to:
-- [Mikael Mutafyan](https://phonetool.amazon.com/users/mimuta)
-- [Aris Tsakpinis](https://phonetool.amazon.com/users/tsaris)
+- [Mikael Mutafyan](https://linkedin.com/in/mikaelmutafyan)
+- [Aris Tsakpinis](https://linkedin.com/in/aris-tsakpinis-15a320143)
 
 for help with questions, recommendations, and workshop review.
 
