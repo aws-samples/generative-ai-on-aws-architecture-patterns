@@ -24,65 +24,14 @@ If you use your own account make sure to fulfill the following pre-requisites be
 
 The next sections contain step-by-step instructions how to setup the required development environments.
 
-### Clone the workshop repository
-Clone the public GitHub [repo](https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns) to your local notebook:
-
-```sh
-git clone https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns.git
-```
-
 ### Setup AWS Cloud9 environment
 You're going to use AWS Cloud9 environment to prepare the chatbot app container and build and deploy the end-to-end application stack.
 
 To setup AWS Cloud9:
 - Sign in an AWS account 
-- If you don't have an existing Cloud9 environment, setup a new one. See [Hello AWS Cloud9](https://docs.aws.amazon.com/cloud9/latest/user-guide/tutorial.html) for a step-by-step instruction
-- Use `m5.large` instance and `Amazon Linux 2` platform
-- Open the Cloud9 environment
-- Upload the folder where you cloned the workshop repository, e.g. `genai-rag-bot-workshop`, to the Cloud9 environment
-- Open the terminal in  Cloud9 and run `cd genai-rag-bot-workshop/`
-- Run `aws sts get-caller-identity` and make sure you have the Administrator role
-- Run `chmod +x resize-disk.sh`
-- Run `./resize-disk.sh 100`
-
-#### Upgrade to Python 3.10
-The Lambda function you're going to implement requires Python 3.10 runtime. This in turn requires the Python 3.10 version of AWS SAM CLI. Before start with the workshop, you need to upgrade Cloud9 Python version to 3.10.
-
-Follow the instructions below and run all commands in Cloud9 terminal:
-
-1. Install `pyenv`: 
-```sh
-git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-cat << 'EOT' >> ~/.bashrc
-export PATH="$HOME/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-EOT
-source ~/.bashrc
-```
-
-2. Install openSSL:
-```sh
-sudo yum update -y
-sudo yum erase openssl-devel -y
-sudo yum install openssl11 openssl11-devel xz-devel libffi-devel bzip2-devel wget -y
-```
-
-3. This command installs Python 3.10 and runs for several minutes:
-```sh
-pyenv install 3.10
-pyenv global 3.10
-```
-
-4. Set the Python alias:
-```
-export PATH="$HOME/.pyenv/shims:$PATH"
-```
-
-5. Confirm the Python version:
-```sh
-source ~/.bash_profile
-python --version
-```
+- If you don't have an existing AWS Cloud9 environment, setup a new one. See [Hello AWS Cloud9](https://docs.aws.amazon.com/cloud9/latest/user-guide/tutorial.html) for a step-by-step instruction
+- Choose at least `m5.large` instance and `Ubuntu Server 22.04 LTS` as the platform
+- Open the AWS Cloud9 environment
 
 #### Upgrade AWS SAM CLI
 To work with Python 3.10 runtime, you need to upgrade SAM to the latest version:
@@ -92,6 +41,15 @@ unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
 sudo ./sam-installation/install --update
 sam --version
 ```
+#### Download source code into your development environment
+To have all workshop assets you must clone the workshop source code repository into your AWS Cloud9 environment.
+
+In the AWS Cloud9 terminal window:
+
+- Clone the workshop github repo to your environment: ::code[git clone https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns.git]{language=sh}
+- Change to the workshop folder: ::code[cd generative-ai-on-aws-architecture-patterns/]{language=sh}
+- Run ::code[aws sts get-caller-identity]{language=sh} and make sure you have the Administrator role
+- Run ::code[bash ./content/scripts/resize-disk.sh 100]{language=sh} to increase the size of AWS Cloud9 EBS volume
 
 ### Setup SageMaker Studio
 You're going to use SageMaker Studio to deploy a real-time LLM endpoint. 
@@ -142,6 +100,18 @@ Add `bedrock.amazonaws.com` to the user profile execution role trust relationshi
 }
 ```
 
+#### Download source code into Amazon SageMaker Studio
+In the Studio top menu select **File**, then **New**, then **Terminal**:
+
+![](/static/img/studio-system-terminal-via-menu.png)
+
+Run the following command in the terminal:
+:::code{language=sh showCopyAction=true}
+git clone https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns.git
+:::
+
+The code repository will be downloaded and saved in your home directory in Studio.
+
 Now you all setup to start with the RAG chatbot implementation.
 
 ## Generative AI design patterns
@@ -174,18 +144,18 @@ It's important to understand, that ICL is not training and there is no parameter
 
 The following example shows the ICL approach:
 
-![](./static/img/icl-example.png)
+![](/static/img/icl-example.png)
 
 Refer to the original paper [A Survey on In-context Learning](https://arxiv.org/abs/2301.00234) for more details.
 
 ### RAG architecture
 RAG design pattern is an extension of ICL where you connect a model to a knowledge base.
 
-![](./static/img/rag-overview.png)
+![](/static/img/rag-overview.png)
 
 1. A user asks a question in a chatbot application
 2. The chatbot sends the question to a retriever component
-3. The retriever prepares and sends a search query to a knowledge base which is an information retrieval (IR) engine. The IR engine can be implemented using any technology. Refer to a deep dive on different IR approaches [How to Build an Open-Domain Question Answering System?](bit.ly/3ZppYAl) for more information. Very often the IR engine is a semantic search
+3. The retriever prepares and sends a search query to a knowledge base which is an information retrieval (IR) engine. The IR engine can be implemented using any technology. Refer to a deep dive on different IR approaches [How to Build an Open-Domain Question Answering System?](https://bit.ly/3ZppYAl) for more information. Very often the IR engine is a semantic search
 4. The IR engine returns search results with document excerpts and links to relevant documents
 5. The retriever sends the response to the chatbot/orchestrator
 6. The chatbot/orchestrator send the user question concatenated with the search results as an LLM prompt to an LLM of your choice. Here is important to understand the context length limitation and prompt engineering approaches for a specific LLM
@@ -194,7 +164,7 @@ RAG design pattern is an extension of ICL where you connect a model to a knowled
 
 The following exhibit shows a RAG example:
 
-![](./static/img/rag-example.png)
+![](/static/img/rag-example.png)
 
 ## Implementation
 This section contains step-by-step instructions and all details needed to implement your first RAG-based generative AI application.
@@ -202,7 +172,7 @@ This section contains step-by-step instructions and all details needed to implem
 ### Architecture overview
 Now aimed with the theoretical knowledge, you're about to implement the following architecture. You use AWS services as building blocks to implement a scalable, secure, and reliable solution.
 
-![](static/design/rag-bot-architecture-overview.drawio.svg)
+![](/static/design/rag-bot-architecture-overview.drawio.svg)
 
 ### Knowledge base
 In this section you're going to create and populate a knowledge base you're going to connect to the chatbot.
@@ -220,14 +190,14 @@ In this workshop you are going to use Amazon Kendra to implement a retriever par
 Create Kendra index:
 1. Navigate to [Amazon Kendra console](https://us-east-1.console.aws.amazon.com/kendra/home?region=us-east-1#/)
 2. Choose **Create and index**
-![](./static/img/kendra-create-index.png)
+![](/static/img/kendra-create-index.png)
 3. Provide a name for the index
 4. Choose create a new role, provide the role name suffix, choose **Next**
-![](./static/img/kendra-index-details.png)
+![](/static/img/kendra-index-details.png)
 6. Choose **No** for token access control, choose **Next** 
-![](./static/img/kendra-user-access-control.png)
+![](/static/img/kendra-user-access-control.png)
 7. Choose **Developer edition**, choose **Next**
-![](.//static/img/kendra-choose-edition.png)
+![](/static/img/kendra-choose-edition.png)
 8. Review and choose **Create**
 
 Wait until the Amazon Kendra index is created and ready:
@@ -245,9 +215,9 @@ You're going to ingest public press releases from Swiss Government web site http
 To create web crawler and ingest documents to the index:
 1. Navigate to the created index in the [Amazon Kendra console](https://us-east-1.console.aws.amazon.com/kendra/home?region=us-east-1#indexes) 
 2. Choose **Add data source**
-![](./static/img/kendra-add-data-source.png)
+![](/static/img/kendra-add-data-source.png)
 3. Choose **Web Crawler v2.0** connector and click **Add connector** You can choose any other connector to connect to a data source of your choice and ingest documents from that data source
-![](./static/img/kendra-web-crawler.png)
+![](/static/img/kendra-web-crawler.png)
 
 The following instruction assumes you use the Web Crawler to ingest the documents from the site https://www.admin.ch/. If you use another data source or another web URL, configure the Amazon Kendra connector accordingly.
 
@@ -281,7 +251,7 @@ These URLs contain about 200 the most recent press releases in English.
 5. Review and create
 
 Choose **Sync now**
-![](./static/img/kendra-sync-data-source.png)
+![](/static/img/kendra-sync-data-source.png)
 
 The crawling and document indexing takes about 15 minutes. You don't need to wait until the sync finished and can move to the next task.
 
@@ -292,7 +262,7 @@ The crawling and document indexing takes about 15 minutes. You don't need to wai
 
 ### Generator
 You use an LLM as a generator to generate answers to the question using retrieved context.
-Navigate to SageMaker Studio and open `notebooks/llm-generator.ipynb` notebook. Follow the instructions in the notebook to create an LLM real-time endpoint.
+Navigate to SageMaker Studio and open `content/lab-01/notebooks/llm-generator.ipynb` notebook. Follow the instructions in the notebook to create an LLM real-time endpoint.
 
 The deployment of an LLM real-time endpoint takes about 15 minutes.
 
@@ -408,13 +378,13 @@ Copy the value of `RAGChatBotUrl` in a browser and start the chatbot.
 
 If everything works fine, you should see the chatbot user interface:
 
-![](./static/img/rag-bot-ux.png)
+![](/static/img/rag-bot-ux.png)
 
 ## Experimentation
 Now ask some questions about Switzerland or on generally any topic, for example:
 `What is the usage of fossil fuels in Switzerland?` or `What is the inflation forecast in Switzerland in 2023?`.
 
-![](./static/img/rag-bot-ux-conversation.png)
+![](/static/img/rag-bot-ux-conversation.png)
 
 ### Try out various Amazon Bedrock LLMs in console
 
@@ -435,11 +405,11 @@ If you use own AWS account, you must delete provisioning resources to avoid unne
 Remove the application CloudFormation stack:
 - Execute in the Cloud9 terminal: `sam delete`. Wait until stacks are deleted
 
-Remove the SageMaker endpoint:
+If you used a SageMaker LLM endpoint, remove it:
 - Navigate to SageMaker Studio
 - Execute the **Clean up** section of the `llm-generator.ipynb` notebook
 
-Delete the Cloud9 environment is you don't need it anymore.
+Delete the AWS Cloud9 environment is you don't need it anymore.
 
 Delete the Amazon Kendra data source and Amazon Kendra index.
 
@@ -463,7 +433,7 @@ The workshop authors:
 
 [Yevgeniy Ilyin](https://www.linkedin.com/in/yevgeniyilyin/) | [Nikita Fedkin](https://www.linkedin.com/in/nikitafed/) |
 :---:|:---:
-![](./static/img/hyperbadge_ilyiny.png)  |  ![](./static/img/hyperbadge_nikitafe.png)
+![](/static/img/hyperbadge_ilyiny.png)  |  ![](/static/img/hyperbadge_nikitafe.png)
 
 
 Special thanks to:

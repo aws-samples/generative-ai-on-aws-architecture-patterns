@@ -33,7 +33,7 @@ with st.sidebar:
     - [LangChain](https://python.langchain.com/docs/get_started/introduction)
     ''')
     add_vertical_space(5)
-    st.write('Made with ❤ for Tech Summit EMEA')
+    st.write('Made with ❤ for AWS workshops')
 
 st.markdown("""
         <style>
@@ -96,7 +96,7 @@ def write_top_bar():
     with col2:
         st.write(f"<h4 class='main-header'>RAG Bot</h4>",  unsafe_allow_html=True)
     with col5:
-        bedrock = st.checkbox('Use Bedrock')
+        bedrock = st.checkbox(label='Use Bedrock', value=True)
         st.session_state['USE_BEDROCK'] = bedrock
     with col3:
         if st.button("Clear Chat", key="clear"):
@@ -142,8 +142,8 @@ if 'past' not in st.session_state:
 ## Function for taking user prompt as input followed by producing AI generated responses
 def generate_response(prompt):
     url = f'{base_url}/ragapp'
-    USE_BEDROCK = st.session_state['USE_BEDROCK']
-    body = {"query": prompt, "uuid": session_id, "USE_BEDROCK": USE_BEDROCK}
+    use_bedrock = st.session_state['USE_BEDROCK']
+    body = {"query": prompt, "uuid": session_id, "USE_BEDROCK": use_bedrock}
     response = requests.post(url, headers=headers, data=json.dumps(body), verify=False)
     output_text = response.text
     return output_text
