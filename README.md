@@ -114,7 +114,7 @@ Add `bedrock.amazonaws.com` to the user profile execution role trust relationshi
 }
 ```
 
-#### Download source code into Amazon SageMaker Studio
+#### Download source code into Amazon SageMaker Studio
 In the Studio top menu select **File**, then **New**, then **Terminal**:
 
 ![](/static/img/studio-system-terminal-via-menu.png)
@@ -141,11 +141,11 @@ All design patterns in this workshop built on the in-context learning approach.
 
 Each lab focuses on one of the following design patterns:
 
-Lab 1: In-context learning and prompt engineering
-[Lab 2](/content/lab-02/README.md): Retrieval augmented generation (RAG) and conversational FAQ (CFAQ)
-Lab 3: Natural language queries (NLQ)
-Lab 4: Reasoning and react (ReAct)
-Lab 5: Multi-agents
+- Lab 1: In-context learning and prompt engineering
+- [Lab 2](/content/lab-02/README.md): Retrieval augmented generation (RAG) and conversational FAQ (CFAQ)
+- Lab 3: Natural language queries (NLQ)
+- Lab 4: Reasoning and react (ReAct)
+- Lab 5: Multi-agents  
 
 This set of design pattern is not exhaustive, but covers the majority of common and frequent use cases.
 
@@ -164,6 +164,7 @@ The following example shows the ICL approach:
 
 Refer to the original paper [A Survey on In-context Learning](https://arxiv.org/abs/2301.00234) for more details.
 
+## Get started with hands-on labs
 Navigate to each lab's folder and follow the instructions in `README.md` file.
 
 ## Contributors

@@ -1,7 +1,7 @@
 # Retrieval augmented generation chat bot
 This folder contains the source code for RAG chat bot using Amazon Kendra and Amazon Bedrock.
 
-### RAG architecture
+## RAG architecture
 RAG design pattern is an extension of ICL where you connect a model to a knowledge base. Refer to the original paper [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) for a technical overview.
 
 ![](/static/img/rag-overview.png)
@@ -23,7 +23,7 @@ The following exhibit shows a RAG example:
 This section contains step-by-step instructions and all details needed to implement your first RAG-based generative AI application.
 
 ### Architecture overview
-Now aimed with the theoretical knowledge, you're about to implement the following architecture. You use AWS services as building blocks to implement a scalable, secure, and reliable solution.
+Aimed with the theoretical knowledge, you're about to implement the following architecture. You use AWS services as building blocks to implement a scalable, secure, and reliable solution.
 
 ![](/static/design/rag-bot-architecture-overview.drawio.svg)
 

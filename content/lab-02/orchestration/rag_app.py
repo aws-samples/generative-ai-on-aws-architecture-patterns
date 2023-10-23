@@ -19,6 +19,7 @@ KENDRA_INDEX_ID = os.environ.get('KENDRA_INDEX_ID')
 SM_ENDPOINT_NAME = os.environ.get('SM_ENDPOINT_NAME')
 LLM_CONTEXT_LENGTH = os.environ.get('LLM_CONTEXT_LENGTH', '2048')
 BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-v2')
+KENDRA_TOP_K = os.environ.get('KENDRA_TOP_K', '3')
 
 # Content Handler for Falcon40b-instruct - please uncomment below if you used this option
 class ContentHandler(LLMContentHandler):
@@ -103,7 +104,7 @@ def lambda_handler(event, context):
         retriever = AmazonKendraRetriever(
             index_id=KENDRA_INDEX_ID,
             region_name=REGION,
-            top_k=2
+            top_k=int(KENDRA_TOP_K)
         )
 
         qa = ConversationalRetrievalChain.from_llm(
