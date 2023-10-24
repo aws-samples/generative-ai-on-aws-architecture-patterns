@@ -1,0 +1,183 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create a front-end application stack for LLM chatbot application
+
+Outputs:
+  AppUrl:
+    Value: !Sub "https://${LoadBalancer.DNSName}"
+
+Parameters:
+  VPCId:
+    Type: String
+    Description: VPC for the load balancer
+
+  PublicSubnet1: 
+    Type: String
+    Description: Public subnet id 
+
+  PublicSubnet2: 
+    Type: String
+    Description: Public subnet id 
+
+  SSLCertificateArn:
+    Type: String
+    Description: SSL server certificate for Application Load Balancer listener HTTPS
+    
+  APIId:
+    Type: String
+
+  ECRImageURI:
+    Type: String
+    Description: Image URI of the chatbot front-end container
+
+Resources:
+
+# ECS Fargate
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn: 
+      - LoadBalancerListener
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition: !Ref ECSTaskDefinition
+      LoadBalancers:
+        - TargetGroupArn: !Ref TargetGroup
+          ContainerPort: 80
+          ContainerName: llm-app
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref PublicSubnet1
+            - !Ref PublicSubnet2
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - !Ref SecurityGroupEcs
+
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities:
+      - FARGATE
+      NetworkMode: awsvpc
+      Cpu: '1024'
+      Memory: '2048'
+      ExecutionRoleArn: !GetAtt EcsTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt EcsTaskExecutionRole.Arn
+      ContainerDefinitions:
+      - Name: llm-app
+        Image: !Ref ECRImageURI
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-region: !Ref 'AWS::Region'
+            awslogs-group: !Ref MyLogGroup
+            awslogs-stream-prefix: my-container
+        Environment: 
+          - Name: BASE_URL
+            Value: !Sub "https://${APIId}.execute-api.${AWS::Region}.amazonaws.com/Stage"
+        PortMappings:
+          - ContainerPort: 80
+            HostPort: 80
+            Protocol: 'tcp'
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+
+  SecurityGroupEcs:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP access from ALB security group
+      VpcId: !Ref VPCId
+
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+      
+  MyLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: llm-app-log-group
+      RetentionInDays: 7
+
+  EcsTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ecs-task-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:GetAuthorizationToken 
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: 
+                  - "*"
+
+  # Load Balancing
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: LoadBalancerSecurityGroup
+      GroupDescription: Security group for load balancer
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: llm-app-load-balancer
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !GetAtt LoadBalancerSecurityGroup.GroupId
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates:
+        - CertificateArn: !Ref SSLCertificateArn
+      Port: 443
+      Protocol: HTTPS
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      TargetType: ip
+      Name: alb-target-group
+      Port: 80
+      Protocol: HTTP
+      VpcId: !Ref VPCId

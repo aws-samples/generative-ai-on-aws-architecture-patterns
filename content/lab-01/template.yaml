@@ -1,0 +1,176 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Generative AI chatbot
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: genai-on-aws-workshop-llm-bot
+    Description: An example how to implement an LLM chatbot
+    Author: ilyiny
+    SpdxLicenseId: MIT
+    LicenseUrl: ./LICENSE
+    ReadmeUrl: ./README.md
+    Labels: ['amazon', 'generative AI', 'genAI', 'LLM', 'SageMaker', 'Bedrock']
+    HomePageUrl: https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns
+
+Globals:
+  Function:
+    Runtime: python3.10
+    MemorySize: 1024
+    Timeout: 120
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+    Tags:
+      Project: genai-on-aws-workshop-llm-bot
+
+Outputs:
+  LLMChatBotUrl:
+    Description: URL of the chatbot front-end
+    Value: !GetAtt App.Outputs.AppUrl
+  
+Parameters:
+  LLMContextLength:
+    Type: Number
+    Default: 2048
+    Description: Max number of tokens in LLM context, input and output text
+
+  ECRImageURI:
+    Type: String
+    Description: Image URI of the chatbot front-end container
+
+  SageMakerLLMEndpointName:
+    Type: String
+    Description: LLM endpoint name, leave empty if using Amazon Bedrock LLM
+
+Rules:
+  ECRImageURINotEmpty:
+    Assertions:
+      - Assert: !Not [ !Equals [ !Ref ECRImageURI, '' ] ]
+        AssertDescription: ECRImageURI must be provided
+
+Resources:
+  
+######## Front-end stacks ########
+  App:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: cfn-templates/app.yaml
+      Parameters:
+        APIId: !Ref BackendApi
+        ECRImageURI: !Ref ECRImageURI
+        VPCId: !GetAtt GetDefaultVpc.VpcId
+        PublicSubnet1: !Select ['0', !GetAtt GetDefaultVpc.Subnets]
+        PublicSubnet2: !Select ['1', !GetAtt GetDefaultVpc.Subnets]
+        SSLCertificateArn: !GetAtt RegisterSSLCertificate.CertificateArn
+
+######## Custom resources to call Lambda functions ########
+  RegisterSSLCertificate:
+    Type: Custom::RegisterSSLCertificate
+    Properties:
+      ServiceToken: !GetAtt RegisterSSLCertificateFunction.Arn
+      email_address: 'ilyiny@amazon.com'
+      common_name: 'example.example.com'
+      city: 'Seattle'
+      state: 'WA'
+      country_code: 'USA'
+      organization: 'AWS'
+      organizational_unit: 'SA'
+
+  GetDefaultVpc:
+    Type: Custom::GetDefaultVpc
+    Properties:
+      ServiceToken: !GetAtt GetDefaultVpcFunction.Arn
+
+######## Serverless backend ########
+  BackendApi:
+      Type: AWS::Serverless::Api
+      Properties:
+        StageName: prod
+
+  GetDefaultVpcFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/get-default-vpc
+      Handler: get_default_vpc.lambda_handler
+      PackageType: Zip
+      ReservedConcurrentExecutions: 1
+      Policies:
+        - AmazonEC2ReadOnlyAccess
+
+  RegisterSSLCertificateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/register-cert
+      Handler: register_self_signed.lambda_handler
+      PackageType: Zip
+      ReservedConcurrentExecutions: 1
+      Policies:
+        - Statement:
+          - Sid: ACMAccess
+            Effect: Allow
+            Action:
+              - acm:ImportCertificate
+              - acm:AddTagsToCertificate
+              - acm:DeleteCertificate
+            Resource: "*"
+
+  BackendAppFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/backend-app
+      Handler: backend_app.lambda_handler
+      PackageType: Zip
+      Environment:
+        Variables:
+          SM_ENDPOINT_NAME: !Ref SageMakerLLMEndpointName       
+          LLM_CONTEXT_LENGTH: !Ref LLMContextLength
+          BEDROCK_MODEL_ID: "anthropic.claude-instant-v1"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /backendapp
+            Method: POST
+            RestApiId:
+              Ref: BackendApi
+      Policies:
+        - Statement:
+          - Sid: SageMakerAccess
+            Effect: Allow
+            Action:
+              - sagemaker:InvokeEndpoint*
+            Resource: '*'
+          - Sid: DynamoDbAccess
+            Effect: Allow
+            Action:
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource: "*"
+          - Sid: BedrockRuntimeAccess
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: "*"
+                
+  MemoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MemoryTable
+      AttributeDefinitions:
+        - AttributeName: SessionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: SessionId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST

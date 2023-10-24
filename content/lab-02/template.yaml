@@ -8,13 +8,13 @@ Description: >
 
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: genai-rag-chatbot-workshop
+    Name: genai-on-aws-workshop-rag-bot
     Description: Workshop to implement a retrieval augmented generation generative AI chatbot
     Author: ilyiny
     SpdxLicenseId: MIT
     LicenseUrl: ./LICENSE
     ReadmeUrl: ./README.md
-    Labels: ['amazon', 'generative AI', 'gebAI', 'RAG', 'RAG chatbot', 'Bedrock']
+    Labels: ['amazon', 'generative AI', 'genAI', 'RAG', 'RAG chatbot', 'Bedrock']
     HomePageUrl: https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns
     SemanticVersion: 1.0.0
     SourceCodeUrl: https://github.com/aws-samples/generative-ai-on-aws-architecture-patterns
@@ -28,7 +28,7 @@ Globals:
       Variables:
         LOG_LEVEL: INFO
     Tags:
-      Project: genai-rag-bot-workshop
+      Project: genai-on-aws-workshop-rag-bot
 
 Outputs:
   RAGChatBotUrl:
@@ -51,7 +51,7 @@ Parameters:
 
   SageMakerLLMEndpointName:
     Type: String
-    Description: LLM endpoint name
+    Description: LLM endpoint name, leave empty if using Amazon Bedrock LLM
 
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
@@ -139,7 +139,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - sagemaker:InvokeEndpoint
+                  - sagemaker:InvokeEndpoint*
                 Resource: '*'
         - PolicyName: LambdaLogsAccess
           PolicyDocument:

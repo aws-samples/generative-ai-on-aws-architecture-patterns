@@ -4,7 +4,7 @@ This folder contains the source code for a generative AI chatbot using Amazon Be
 ## Chatbot architecture
 
 ## Implementation
-This section contains step-by-step instructions and all details needed to implement your first RAG-based generative AI application.
+This section contains step-by-step instructions and all details needed to implement your first chatbot using a LLM.
 
 ## Experimentation
 
