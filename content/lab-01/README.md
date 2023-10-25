@@ -165,12 +165,32 @@ If everything works fine, you should see the chatbot user interface:
 If you use own AWS account, you must delete provisioning resources to avoid unnecessary charges. You don't need to clean up if you use a workshop instructor provided account.
 
 Remove the application CloudFormation stack:
-- Execute in the Cloud9 terminal: `sam delete`. Wait until stacks are deleted
+- Execute in the AWS Cloud9 terminal:
+```sh
+cd ~/environment/generative-ai-on-aws-architecture-patterns/content/lab-01/
+sam delete
+```
+
+Wait until stacks are deleted.
+
+If you used a SageMaker LLM endpoint, remove it:
+- Navigate to SageMaker Studio
+- Execute the **Clean up** section of the `content/lab-01/notebooks/llm-endpoint.ipynb` notebook
 
 Delete the AWS Cloud9 environment is you don't need it anymore.
 
 ## Resources
 The following is the collection of useful links to the related resources.
+
+- [A Survey on In-context Learning](https://arxiv.org/abs/2301.00234)
+- [Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165)
+- [Large Language Models Are Human-Level Prompt Engineers](https://arxiv.org/abs/2211.01910)
+
+Prompt engineering guides:
+- [Prompt engineering guide](https://www.promptingguide.ai/)
+- [AI21 Prompt Engineering](https://docs.ai21.com/docs/prompt-engineering) 
+- [Anthropic Claude Prompt Design](https://docs.anthropic.com/claude/docs/introduction-to-prompt-design) 
+- [Cohere Prompt Engineering](https://docs.cohere.com/docs/prompt-engineering)
 
 ---
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
