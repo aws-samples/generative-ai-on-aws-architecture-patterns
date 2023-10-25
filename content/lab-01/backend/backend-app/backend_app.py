@@ -15,6 +15,7 @@ SM_ENDPOINT_NAME = os.environ.get('SM_ENDPOINT_NAME')
 LLM_CONTEXT_LENGTH = os.environ.get('LLM_CONTEXT_LENGTH', '2048')
 BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-instant-v1')
 CHAT_WINDOW_SIZE = os.environ.get('CHAT_WINDOW_SIZE', '5')
+DDB_MEMORY_TABLE = os.environ.get('DDB_MEMORY_TABLE', 'LLMChatMemoryTable')
 
 # Content Handler for Falcon40b-instruct
 class ContentHandler(LLMContentHandler):
@@ -75,7 +76,7 @@ def lambda_handler(event, context):
         llm = get_llm(use_bedrock)
 
         message_history = DynamoDBChatMessageHistory(
-            table_name="MemoryTable",
+            table_name=DDB_MEMORY_TABLE,
             session_id=uuid
         )
 

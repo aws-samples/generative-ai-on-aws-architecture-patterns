@@ -21,7 +21,7 @@ Metadata:
 
 Globals:
   Function:
-    Runtime: python3.10
+    Runtime: python3.11
     MemorySize: 1024
     Timeout: 120
     Environment:
@@ -79,7 +79,7 @@ Resources:
       common_name: 'example.example.com'
       city: 'Seattle'
       state: 'WA'
-      country_code: 'USA'
+      country_code: 'US'
       organization: 'AWS'
       organizational_unit: 'SA'
 
@@ -108,7 +108,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/register-cert
-      Handler: register_self_signed.lambda_handler
+      Handler: register_self_signed_cert.lambda_handler
       PackageType: Zip
       ReservedConcurrentExecutions: 1
       Policies:
@@ -166,7 +166,7 @@ Resources:
   MemoryTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: MemoryTable
+      TableName: LLMChatMemoryTable
       AttributeDefinitions:
         - AttributeName: SessionId
           AttributeType: S

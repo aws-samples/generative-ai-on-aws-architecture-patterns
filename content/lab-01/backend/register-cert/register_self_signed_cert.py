@@ -5,37 +5,37 @@
 from OpenSSL import crypto
 from cryptography import x509
 import boto3
+import cfnresponse
+import logging
 
 acm = boto3.client("acm")
+logger = logging.getLogger(__name__)
 
 def lambda_handler(event, context):
     """
     Lambda function handler that implements the actions when CloudFormation
     requests a resource Create/Update/Delete.
     """
-    props = event["ResourceProperties"]
-    request_type = event["RequestType"]
-    stack_id = event["StackId"]
+    try:
+        props = event["ResourceProperties"]
+        request_type = event["RequestType"]
+        stack_id = event["StackId"]
 
-    if request_type == "Create":
-        cert = generate_certificate(**props)
-        cert_arn = register_certificate_in_acm(cert=cert, stack_id=stack_id)
-    elif request_type == "Update":
-        # Deletes and regenerates a self-signed certificate
-        cert_arn = delete_certificate(event["PhysicalResourceId"])
-        cert = generate_certificate(**props)
-        cert_arn = register_certificate_in_acm(cert=cert, stack_id=stack_id)
-    else: # Delete
-        cert_arn = delete_certificate(event["PhysicalResourceId"])
+        if request_type == "Create":
+            cert = generate_certificate(**props)
+            cert_arn = register_certificate_in_acm(cert=cert, stack_id=stack_id)
+        elif request_type == "Update":
+            # Deletes and regenerates a self-signed certificate
+            cert_arn = delete_certificate(event["PhysicalResourceId"])
+            cert = generate_certificate(**props)
+            cert_arn = register_certificate_in_acm(cert=cert, stack_id=stack_id)
+        else: # Delete
+            cert_arn = delete_certificate(event["PhysicalResourceId"])
 
-    output = {
-        'PhysicalResourceId': cert_arn,
-        'Data': {
-            'CertificateArn': cert_arn
-        }
-    }
-
-    return output
+        cfnresponse.send(event, context, cfnresponse.SUCCESS, {'CertificateArn': cert_arn}, cert_arn)
+    except Exception as exception:
+        logger.exception(str(exception))
+        cfnresponse.send(event, context, cfnresponse.FAILED, {}, physicalResourceId=event.get('PhysicalResourceId'))
 
 def generate_certificate(
         email_address,

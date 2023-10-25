@@ -1,10 +1,11 @@
 import json
 import boto3
 import cfnresponse
-from logging import logger
+import logging
 import traceback
 
 ec2 = boto3.client('ec2')
+logger = logging.getLogger(__name__)
 
 def lambda_handler(event, context):     
     try:         
@@ -15,7 +16,7 @@ def lambda_handler(event, context):
         else:
             cfnresponse.send(event, context, cfnresponse.SUCCESS, {},'')
     except:
-        logger.exception(f"CFGetDefaultVpcIdTut:failed :{traceback.format_exc()}")
+        logger.exception(f"GetDefaultVpc failed:{traceback.format_exc()}")
         cfnresponse.send(event, context, cfnresponse.FAILED, {})
 
 def get_default_vpc_id():

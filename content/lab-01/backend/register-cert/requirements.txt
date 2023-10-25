@@ -1,1 +1,3 @@
+cffi
 pyOpenSSL
+cfnresponse2
