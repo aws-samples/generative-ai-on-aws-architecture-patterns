@@ -37,7 +37,11 @@ If you use your own account make sure to fulfill the following pre-requisites be
 1. Admin access to the account
 1. [Request access](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html) to Amazon Bedrock models
 1. [AWS Console access](https://console.aws.amazon.com/console/home?#)
-1. If you'd like to experiment with an LLM real-time SageMaker endpoint, you must set the quota for `ml.g5.12xlarge` for your AWS Account to at least 1. You can increase the quota in AWS console as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
+1. If you'd like to experiment with an LLM real-time SageMaker endpoints, you'll need the following SageMaker ML instances for real-time inference:
+- minimal setup to be able to deploy and experiment with small models, like [Falcon-7B](https://huggingface.co/tiiuae/falcon-7b-instruct): `ml.g5.2xlarge`
+- recommended setup to be able to use bigger models like [Falcon-40B](https://huggingface.co/tiiuae/falcon-40b-instruct): `ml.g5.12xlarge` (4x NVidia GPUs) or `ml.g5.48xlarge` (8x NVidia GPUs)
+
+You can check and increase your quotas for these instances as described in [this instructions](https://aws.amazon.com/premiumsupport/knowledge-center/manage-service-limits/). You don't need to increase quota if you're going to use Amazon Bedrock only
 
 ![](/static/img/sagemaker-quota-increase.png)
 
@@ -141,7 +145,7 @@ All design patterns in this workshop built on the in-context learning approach.
 
 Each lab focuses on one of the following design patterns:
 
-- Lab 1: In-context learning and prompt engineering
+- [Lab 1](/content/lab-01/README.md): In-context learning and prompt engineering
 - [Lab 2](/content/lab-02/README.md): Retrieval augmented generation (RAG) and conversational FAQ (CFAQ)
 - Lab 3: Natural language queries (NLQ)
 - Lab 4: Reasoning and react (ReAct)

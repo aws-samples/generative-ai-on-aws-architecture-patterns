@@ -113,8 +113,10 @@ The crawling and document indexing takes about 15 minutes. You don't need to wai
 🚧 Available in the next version of the workshop!
 
 ### Generator
+Create a SageMaker inference LLM endpoint only if you'd like to experiment with SageMaker endpoints and JumpStart, otherwise move to **Chatbot app** section.
+
 You use an LLM as a generator to generate answers to the question using retrieved context.
-Navigate to SageMaker Studio and open `content/lab-02/notebooks/llm-generator.ipynb` notebook. Follow the instructions in the notebook to create an LLM real-time endpoint.
+Navigate to SageMaker Studio and open `content/notebooks/llm-endpoints.ipynb` notebook. Follow the instructions in the notebook to create an LLM real-time endpoint.
 
 The deployment of an LLM real-time endpoint takes about 15 minutes.
 
@@ -261,7 +263,7 @@ Remove the application CloudFormation stack:
 
 If you used a SageMaker LLM endpoint, remove it:
 - Navigate to SageMaker Studio
-- Execute the **Clean up** section of the `llm-generator.ipynb` notebook
+- Execute the **Clean up** section of the `content/notebooks/llm-endpoints.ipynb` notebook
 
 Delete the AWS Cloud9 environment is you don't need it anymore.
 

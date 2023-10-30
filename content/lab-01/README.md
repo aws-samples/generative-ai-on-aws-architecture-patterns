@@ -27,8 +27,18 @@ You use the following serverless architecture to implement these application lay
 
 Additionally, you're going to use [LangChain](https://www.langchain.com/) to simplify communication with LLM and to manage orchestration, and [streamlit](https://streamlit.io/) to implement the front-end.
 
+**LLM**
+- [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-service.html) for API-based access to LLMs
+- [Amazon SageMaker](https://docs.aws.amazon.com/sagemaker/latest/dg/realtime-endpoints.html) for an LLM self-hosting option
+
 ### LLM endpoint
-TBD
+Create an LLM endpoint only if you'd like to experiment with SageMaker endpoints and JumpStart, otherwise move to **Front-end** section.
+
+In this section you create a SageMaker LLM endpoint and you can experiment with real-time or asynchronous inference options.
+
+Navigate to SageMaker Studio and open `content/notebooks/llm-endpoints.ipynb` notebook. Follow the instructions in the notebook to create an LLM endpoint hosted on SageMaker.
+
+The deployment of an LLM endpoint takes about 15 minutes.
 
 ### Front-end
 In this section you create a front-end app container to run on [AWS Fargate](https://docs.aws.amazon.com/AmazonECS/latest/userguide/what-is-fargate.html).
@@ -175,7 +185,7 @@ Wait until stacks are deleted.
 
 If you used a SageMaker LLM endpoint, remove it:
 - Navigate to SageMaker Studio
-- Execute the **Clean up** section of the `content/lab-01/notebooks/llm-endpoint.ipynb` notebook
+- Execute the **Clean up** section of the `content/notebooks/llm-endpoints.ipynb` notebook
 
 Delete the AWS Cloud9 environment is you don't need it anymore.
 
