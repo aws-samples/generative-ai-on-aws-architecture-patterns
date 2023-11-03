@@ -120,7 +120,7 @@ In this section you're going to deploy the end-to-end application stack, includi
 
 Navigate to the [AWS Cloud9 environment](https://us-east-1.console.aws.amazon.com/cloud9control/home?region=us-east-1#/).
 
-You're going to use [AWS Serverless Application Model (AWS SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy the RAG chatbot application.
+You're going to use [AWS Serverless Application Model (AWS SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy the LLM chatbot application.
 
 The SAM CloudFormation template deploys the following resources:
 - IAM execution roles for AWS Lambda and Amazon ECS task
@@ -148,10 +148,10 @@ Deploy the application:
 
 You need to provide following parameters to pass to the SAM CloudFormation template:
 - `LLMContextLength`: use default 2048 if you use Falcon 40B endpoint otherwise set accordingly to your LLM of choice
-- `ECRImageURI`: use the ECR URI for `rag-app` image you built in the **Chatbot app** step
+- `ECRImageURI`: use the ECR URI for `chatbot-app` image you built in the **Chatbot app** step
 - `SageMakerLLMEndpointName`: use the endpoint name you created if you use a SageMaker LLM endpoint, otherwise leave empty
 
-Answer `Y` to both prompts `Allow SAM CLI IAM role creation [Y/n]:` and `RagAppFunction has no authentication. Is this okay? [y/N]`.
+Answer `Y` to both prompts `Allow SAM CLI IAM role creation [Y/n]:` and `BackendAppFunction has no authentication. Is this okay? [y/N]`.
 
 Provide configuration parameters and wait until the CloudFormation stack deployment succeeded. 
 
