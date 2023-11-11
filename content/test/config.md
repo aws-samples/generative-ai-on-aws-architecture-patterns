@@ -2,6 +2,7 @@
 
 ## Lab 1
 - `ECRImageURI`: 949335012047.dkr.ecr.us-east-1.amazonaws.com/chatbot-app:latest
+- ``: huggingface-pytorch-tgi-inference-2023-10-31-08-46-21-240
 
 ## Lab 2
 - `ECRImageURI`: 949335012047.dkr.ecr.us-east-1.amazonaws.com/rag-app:latest

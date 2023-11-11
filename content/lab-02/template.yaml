@@ -21,7 +21,7 @@ Metadata:
 
 Globals:
   Function:
-    Runtime: python3.10
+    Runtime: python3.11
     MemorySize: 1024
     Timeout: 120
     Environment:
@@ -45,6 +45,11 @@ Parameters:
     Type: String
     Description: Image URI of the chatbot front-end
 
+  KendraRegion:
+    Type: String
+    Description: Kendra region if Kendra index is in a different region
+    Default: ''
+
   KendraIndexId:
     Type: String
     Description: Amazon Kendra index id
@@ -52,6 +57,14 @@ Parameters:
   SageMakerLLMEndpointName:
     Type: String
     Description: LLM endpoint name, leave empty if using Amazon Bedrock LLM
+  
+  CreateVPC:
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Type: String
+    Description: Create a dedicated VPC for the front-end stack. If NO, the default VPC is be used
+    Default: "NO"
 
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
@@ -59,6 +72,9 @@ Parameters:
     Type: String
     Default: 12.0.0.0/16
     Description: CIDR block for a new VPC
+
+Conditions:
+  KendraRegionCondition: !Not [ !Equals [ !Ref KendraRegion, '' ] ]
 
 Rules:
   KendraIndexIdNotEmpty:
@@ -79,6 +95,8 @@ Resources:
       TemplateURL: cfn-templates/vpc.yaml
       Parameters:
         VPCCIDR: !Ref VPCCIDR
+        CreateVPC: !Ref CreateVPC
+        GetDefaultVpcFunctionArn: !GetAtt GetDefaultVpcFunction.Arn
       
   App:
     Type: AWS::CloudFormation::Stack
@@ -98,20 +116,34 @@ Resources:
       Properties:
         StageName: prod
 
+  GetDefaultVpcFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./orchestration/get-default-vpc
+      Handler: get_default_vpc.lambda_handler
+      PackageType: Zip
+      ReservedConcurrentExecutions: 1
+      Policies:
+        - AmazonEC2ReadOnlyAccess
+
   RagAppFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./orchestration
+      CodeUri: ./orchestration/rag-app
       Handler: rag_app.lambda_handler
       PackageType: Zip
       Environment:
         Variables:
           REGION: !Ref "AWS::Region"
+          KENDRA_REGION: !If 
+              - KendraRegionCondition
+              - !Ref KendraRegion
+              - !Ref "AWS::Region"
           KENDRA_INDEX_ID: !Ref KendraIndexId
+          LLM_MEMORY_TABLE: !Ref MemoryTable
           SM_ENDPOINT_NAME: !Ref SageMakerLLMEndpointName       
           LLM_CONTEXT_LENGTH: !Ref LLMContextLength
           BEDROCK_MODEL_ID: "anthropic.claude-v2"
-      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         ApiEvent:
           Type: Api
@@ -120,73 +152,43 @@ Resources:
             Method: POST
             RestApiId:
               Ref: RagAppApi
-
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
       Policies:
-        - PolicyName: SageMakerAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sagemaker:InvokeEndpoint*
-                Resource: '*'
-        - PolicyName: LambdaLogsAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: arn:aws:logs:*:*:*        
-        - PolicyName: DynamoDbAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:Scan
-                  - dynamodb:Query
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:DeleteItem
-                Resource: "*"
-        - PolicyName: KendraSearchAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - kendra:Query
-                  - kendra:BatchGetDocumentStatus
-                  - kendra:Retrieve
-                Resource: "*"
-        - PolicyName: BedrockRuntimeAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - bedrock:InvokeModel
-                Resource: "*"
-                
+        - Statement:
+          - Sid: SageMakerAccess
+            Effect: Allow
+            Action:
+              - sagemaker:InvokeEndpoint*
+              - sagemaker:DescribeEndpoint
+              - sagemaker:DescribeEndpointConfig
+              - sagemaker:ListEndpoints
+              - sagemaker:ListTags
+            Resource: '*'
+          - Sid: DynamoDbAccess
+            Effect: Allow
+            Action:
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource: "*"
+          - Sid: BedrockRuntimeAccess
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: "*"
+          - Sid: KendraSearchAccess
+            Effect: Allow
+            Action:
+              - kendra:Query
+              - kendra:BatchGetDocumentStatus
+              - kendra:Retrieve
+            Resource: "*"
+
   MemoryTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: MemoryTable
       AttributeDefinitions:
         - AttributeName: SessionId
           AttributeType: S

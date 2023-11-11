@@ -56,6 +56,48 @@ To setup AWS Cloud9:
 - Choose at least `m5.large` instance and `Ubuntu Server 22.04 LTS` as the platform
 - Open the AWS Cloud9 environment
 
+You're going to use Python 3.11 to build generative AI application. Run the following commands in AWS Cloud9 terminal.
+
+Upgrade Python version to 3.11:  
+
+1. List the installed python versions  
+```sh
+ls -l /usr/bin/python*
+```
+
+2. Install Python 3.11  
+```sh
+sudo apt update -y
+sudo apt install python3.11 -y
+```
+
+3. See the default Python version  
+```sh
+python3 --version
+```
+
+4. Set 3.11 as the default Python  
+```sh
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2
+sudo update-alternatives --config python3
+```
+
+5. Check that the default Python version is 3.11  
+```sh
+python3 --version
+```
+
+Upgrade AWS SAM CLI:
+```sh
+pip install --upgrade aws-sam-cli
+```
+
+Check the AWS SAM CLI version:
+```sh
+sam --version
+```
+
 #### Download source code into your development environment
 To have all workshop assets you must clone the workshop source code repository into your AWS Cloud9 environment.
 

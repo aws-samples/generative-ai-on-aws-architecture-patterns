@@ -129,6 +129,7 @@ Resources:
       PackageType: Zip
       Environment:
         Variables:
+          LLM_MEMORY_TABLE: !Ref MemoryTable
           SM_ENDPOINT_NAME: !Ref SageMakerLLMEndpointName       
           LLM_CONTEXT_LENGTH: !Ref LLMContextLength
           BEDROCK_MODEL_ID: "anthropic.claude-instant-v1"
@@ -146,6 +147,10 @@ Resources:
             Effect: Allow
             Action:
               - sagemaker:InvokeEndpoint*
+              - sagemaker:DescribeEndpoint
+              - sagemaker:DescribeEndpointConfig
+              - sagemaker:ListEndpoints
+              - sagemaker:ListTags
             Resource: '*'
           - Sid: DynamoDbAccess
             Effect: Allow
@@ -166,7 +171,6 @@ Resources:
   MemoryTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: LLMChatMemoryTable
       AttributeDefinitions:
         - AttributeName: SessionId
           AttributeType: S

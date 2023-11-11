@@ -29,7 +29,7 @@ Additionally, you're going to use [LangChain](https://www.langchain.com/) to sim
 
 **LLM**
 - [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-service.html) for API-based access to LLMs
-- [Amazon SageMaker](https://docs.aws.amazon.com/sagemaker/latest/dg/realtime-endpoints.html) for an LLM self-hosting option
+- [Amazon SageMaker](https://docs.aws.amazon.com/sagemaker/latest/dg/realtime-endpoints.html) for an LLM self-hosting option with SageMaker real-time and asynchronous inference
 
 ### LLM endpoint
 Create an LLM endpoint only if you'd like to experiment with SageMaker endpoints and JumpStart, otherwise move to **Front-end** section.

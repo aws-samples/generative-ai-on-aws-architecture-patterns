@@ -9,13 +9,14 @@ from langchain.llms.sagemaker_endpoint import ContentHandlerBase, LLMContentHand
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain.llms.bedrock import Bedrock
 from langchain.memory.chat_message_histories import DynamoDBChatMessageHistory
+from llm.sagemaker_async_endpoint import *
 
 REGION = os.environ.get('AWS_REGION', os.environ.get('AWS_DEFAULT_REGION'))
 SM_ENDPOINT_NAME = os.environ.get('SM_ENDPOINT_NAME')
 LLM_CONTEXT_LENGTH = os.environ.get('LLM_CONTEXT_LENGTH', '2048')
 BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-instant-v1')
 CHAT_WINDOW_SIZE = os.environ.get('CHAT_WINDOW_SIZE', '5')
-DDB_MEMORY_TABLE = os.environ.get('DDB_MEMORY_TABLE', 'LLMChatMemoryTable')
+LLM_MEMORY_TABLE = os.environ.get('LLM_MEMORY_TABLE', 'LLMChatMemoryTable')
 
 # Content Handler for Falcon40b-instruct
 class ContentHandler(LLMContentHandler):
@@ -76,7 +77,7 @@ def lambda_handler(event, context):
         llm = get_llm(use_bedrock)
 
         message_history = DynamoDBChatMessageHistory(
-            table_name=DDB_MEMORY_TABLE,
+            table_name=LLM_MEMORY_TABLE,
             session_id=uuid
         )
 

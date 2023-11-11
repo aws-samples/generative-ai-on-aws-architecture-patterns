@@ -15,11 +15,13 @@ from langchain.retrievers import AmazonKendraRetriever
 
 
 REGION = os.environ.get('REGION')
+KENDRA_REGION = os.environ.get('KENDRA_REGION', os.environ.get('REGION'))
 KENDRA_INDEX_ID = os.environ.get('KENDRA_INDEX_ID')
 SM_ENDPOINT_NAME = os.environ.get('SM_ENDPOINT_NAME')
 LLM_CONTEXT_LENGTH = os.environ.get('LLM_CONTEXT_LENGTH', '2048')
 BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-v2')
 KENDRA_TOP_K = os.environ.get('KENDRA_TOP_K', '3')
+LLM_MEMORY_TABLE = os.environ.get('LLM_MEMORY_TABLE', 'LLMRagMemoryTable')
 
 # Content Handler for Falcon40b-instruct
 class ContentHandler(LLMContentHandler):
@@ -90,7 +92,7 @@ def lambda_handler(event, context):
         llm = get_llm(use_bedrock)
 
         message_history = DynamoDBChatMessageHistory(
-            table_name="MemoryTable",
+            table_name=LLM_MEMORY_TABLE,
             session_id=uuid
         )
         memory = ConversationBufferWindowMemory(
@@ -103,7 +105,7 @@ def lambda_handler(event, context):
         # This retriever is using the new Kendra retrieve API https://aws.amazon.com/blogs/machine-learning/quickly-build-high-accuracy-generative-ai-applications-on-enterprise-data-using-amazon-kendra-langchain-and-large-language-models/
         retriever = AmazonKendraRetriever(
             index_id=KENDRA_INDEX_ID,
-            region_name=REGION,
+            region_name=KENDRA_REGION,
             top_k=int(KENDRA_TOP_K)
         )
 

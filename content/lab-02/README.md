@@ -25,7 +25,7 @@ This section contains step-by-step instructions and all details needed to implem
 ### Architecture overview
 Aimed with the theoretical knowledge, you're about to implement the following architecture. You use AWS services as building blocks to implement a scalable, secure, and reliable solution.
 
-![](/static/design/rag-bot-architecture-overview.drawio.svg)
+![](/static/design/rag-architecture-aws.drawio.svg)
 
 ### Knowledge base
 In this section you're going to create and populate a knowledge base you're going to connect to the chatbot.
@@ -149,7 +149,7 @@ The main components for the LangChain-based orchestrator are:
 `AmazonKendraRetriever`  
 You use a built-in Amazon Kendra retriever in LangChain. This class provides an abstraction of a retriever component and allows LangChain to interact with Amazon Kendra as part of conversation chain.
 
-You also have a custom implementation of a Amazon Kendra retriever, `KendraIndexRetriever` class in the `orchestration/kendra` folder. This class is not used in the workshop. The implementation for your reference, you can try to use own retriever for any specific requirements.
+You also have a custom implementation of a Amazon Kendra retriever, `KendraIndexRetriever` class in the `orchestration/rag-app/kendra` folder. This class is not used in the workshop. The implementation for your reference, you can try to use own retriever for any specific requirements.
 
 `ConversationalBufferWindowMemory`  
 This built-in LangChain class implements chat memory. There are two types of memory:
@@ -174,7 +174,7 @@ The conversational chain has two steps.
 
 With the declarative nature of LangChain you can easily use a separate language model for each step. For example, you can use a cheaper and faster model for question summarization task, and a larger, more advanced and expensive model for answering the question. In this workshop you use one model for both steps.
 
-To understand how the end-to-end orchestration works and how the components are linked together, look into the orchestration implementation in the Lambda function `content/lab-02/orchestration/rag_app.py`.
+To understand how the end-to-end orchestration works and how the components are linked together, look into the orchestration implementation in the Lambda function `content/lab-02/orchestration/rag-app/rag_app.py`.
 
 #### Orchestration layer deployment
 In this section you're going to deploy the end-to-end application stack, including UX, the backend API, and the serverless orchestration layer implemented as a Lambda function.
@@ -192,7 +192,7 @@ The SAM CloudFormation template deploys the following resources:
 - AWS Lambda function with the orchestration layer implementation
 - Amazon DynamoDB table for conversation history persistence
 
-Look in `template.yaml` CloudFormation template and `content/lab-02/orchestration/rag_app.py` Lambda function code to understand how the main components connected and how the serverless backend works.
+Look in `template.yaml` CloudFormation template and `content/lab-02/orchestration/rag-app/rag_app.py` Lambda function code to understand how the main components connected and how the serverless backend works.
 
 Now deploy the SAM application.
 
@@ -214,9 +214,11 @@ sam deploy --guided
 You need to provide following parameters to pass to the SAM CloudFormation template:
 - `LLMContextLength`: use default 2048 if you use Falcon 40B endpoint otherwise set accordingly to your LLM of choice
 - `ECRImageURI`: use the ECR URI for `rag-app` image you built in the **Chatbot app** step
-- `KendraIndexId`: use the id of the Amazon Kendra index you created
-- `SageMakerLLMEndpointName`: use the endpoint name you created if you use a SageMaker endpoint, otherwise leave it empty
-- `VPCCIDR`: CIDR block for the VPC, you can leave default if there is no conflicts with existing VPCs in your account
+- `KendraRegion`: provide AWS Region name if the Kendra index you created not in the same Region as the app. Otherwise leave empty
+- `KendraIndexId`: use the id of the Amazon Kendra index
+- `SageMakerLLMEndpointName`: use the endpoint name you created if you use a SageMaker endpoint, otherwise leave it empty if you use Amazon Bedrock
+- `CreateVPC`: Choose `YES` if you want to create a new VPC to host the app, otherwise leave default `NO`. In this case the default VPC in the AWS Account will be used
+- `VPCCIDR`: CIDR block for the VPC if you choose to create a new VPC, you can leave default if there is no conflicts with existing VPCs in your account
 
 Please note, if you don't deploy a SageMaker LLM endpoint, you can use Amazon Bedrock API only.
 

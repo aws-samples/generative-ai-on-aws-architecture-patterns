@@ -99,7 +99,6 @@ Resources:
   MyLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: llm-app-log-group
       RetentionInDays: 7
 
   EcsTaskExecutionRole:
@@ -142,7 +141,6 @@ Resources:
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: LoadBalancerSecurityGroup
       GroupDescription: Security group for load balancer
       VpcId: !Ref VPCId
       SecurityGroupIngress:
@@ -154,7 +152,6 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: llm-app-load-balancer
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
@@ -177,7 +174,6 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       TargetType: ip
-      Name: alb-target-group
       Port: 80
       Protocol: HTTP
       VpcId: !Ref VPCId

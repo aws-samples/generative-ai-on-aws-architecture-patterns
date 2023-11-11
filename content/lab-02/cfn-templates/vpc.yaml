@@ -3,15 +3,23 @@ Description: Create network infrastructure for RAG chatbot application
 
 Outputs:
   VPCId:
-    Value: !Ref VPC
+    Value: !If [CreateVPCCondition, !Ref VPC, !GetAtt GetDefaultVpc.VpcId]
 
   PublicSubnet1:
-    Value: !Ref PublicSubnet1
+    Value: !If [CreateVPCCondition, !Ref PublicSubnet1, !Select ['0', !GetAtt GetDefaultVpc.Subnets] ]
 
   PublicSubnet2:
-    Value: !Ref PublicSubnet2
+    Value: !If [CreateVPCCondition, !Ref PublicSubnet2, !Select ['1', !GetAtt GetDefaultVpc.Subnets] ]
 
 Parameters:
+  CreateVPC:
+    AllowedValues:
+      - 'YES'
+      - 'NO'
+    Type: String
+    Description: Create a dedicated VPC for the front-end stack. If NO, the default VPC is used
+    Default: "NO"
+
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
@@ -19,9 +27,33 @@ Parameters:
     Default: 12.0.0.0/16
     Description: CIDR block for a new VPC, required
 
+  GetDefaultVpcFunctionArn:
+    Type: String
+    Description: Lambda function ARN to return the default VPC. Leave empty if CreateVPC == YES
+    Default: ''
+
+Conditions:
+  CreateVPCCondition: !Equals [ !Ref CreateVPC, 'YES' ]
+  DontCreateVPCCondition: !Equals [ !Ref CreateVPC, 'NO' ]
+
+Rules:
+  GetDefaultVpcFunctionArnEmpty:
+    RuleCondition: !Equals [ !Ref CreateVPC, 'NO' ]
+    Assertions:
+      - Assert: !Not [ !Equals [ !Ref GetDefaultVpcFunctionArn, '' ] ]
+        AssertDescription: You must provide GetDefaultVpcFunctionArn if CreateVPC == NO
+
 Resources:
+
+  GetDefaultVpc:
+    Type: Custom::GetDefaultVpc
+    Condition: DontCreateVPCCondition
+    Properties:
+      ServiceToken: !Ref GetDefaultVpcFunctionArn
+
   VPC:
     Type: AWS::EC2::VPC
+    Condition: CreateVPCCondition
     Properties:
       CidrBlock: !Ref VPCCIDR
       EnableDnsSupport: true
@@ -29,6 +61,7 @@ Resources:
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
+    Condition: CreateVPCCondition
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 12.0.0.0/24
@@ -36,6 +69,7 @@ Resources:
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
+    Condition: CreateVPCCondition
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 12.0.1.0/24
@@ -43,25 +77,24 @@ Resources:
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway 
-
-  ElasticIp:
-    Type: AWS::EC2::EIP
-    Properties: 
-      Domain: vpc
+    Condition: CreateVPCCondition
 
   VPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    Condition: CreateVPCCondition
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
+    Condition: CreateVPCCondition
     Properties:
       VpcId: !Ref VPC
 
   PublicRoute:
     Type: AWS::EC2::Route
+    Condition: CreateVPCCondition
     DependsOn: VPCGatewayAttachment
     Properties:
       RouteTableId: !Ref PublicRouteTable
@@ -70,12 +103,14 @@ Resources:
 
   PublicSubnetRouteTableAssociationSn1:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVPCCondition
     Properties:
       SubnetId: !Ref PublicSubnet1
       RouteTableId: !Ref PublicRouteTable
 
   PublicSubnetRouteTableAssociationSn2:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    Condition: CreateVPCCondition
     Properties:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
